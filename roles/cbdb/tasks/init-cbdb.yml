@@ -193,7 +193,7 @@
   async: 600
   poll: 5
   register: init_db
-  when: inventory_hostname in groups['master'] and  cbdb.initdb_with_standby == False
+  when: inventory_hostname in groups['master'] and cbdb.initdb_with_standby == False
   failed_when: init_db.rc > 1
 
 
