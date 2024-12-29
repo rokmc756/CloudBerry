@@ -1,9 +1,9 @@
 ---
 pxf:
-  major_version: 6
-  minor_version: 9.0
-  patch_version: 2
-  cbdb_version: gp6
+  major_version: 1
+  minor_version: 6
+  patch_version: 0
+  build_version: 1
   arch_type: x86_64
   binary_type: rpm
   os_version: el9

@@ -14,7 +14,7 @@
   become_user: gpadmin
   args:
     executable: /bin/bash
-  shell: ( source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster stop )
+  shell: ( source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && /usr/local/{{ cbdb_pxf_version }}/bin/pxf cluster stop )
   register: pxf_cluster_stopped
   ignore_errors: yes
   when: inventory_hostname in groups['master']
@@ -56,7 +56,7 @@
 - name: Prepare PXF on master for Oracle Access
   become: yes
   become_user: gpadmin
-  shell: ( source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && PXF_BASE={{ oracle.base_work_dir }} /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster prepare )
+  shell: ( source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && PXF_BASE={{ oracle.base_work_dir }} /usr/local/{{ cbdb_pxf_version }}/bin/pxf cluster prepare )
   args:
     executable: /bin/bash
   register: pxf_cluster_oracle_prepared
@@ -105,7 +105,7 @@
 - name: Synchronize the PXF server configuration to the cbdb cluster
   become: yes
   become_user: gpadmin
-  shell: ( source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && PXF_BASE={{ oracle.base_work_dir }} /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster sync )
+  shell: ( source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && PXF_BASE={{ oracle.base_work_dir }} /usr/local/{{ cbdb_pxf_version }}/bin/pxf cluster sync )
   args:
     executable: /bin/bash
   register: pxf_cluster_oracle_synced
@@ -118,7 +118,7 @@
 
 - name: Start PXF on master for Oracle Access
   become_user: gpadmin
-  shell: ( source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && PXF_BASE={{ oracle.base_work_dir }} /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster start )
+  shell: ( source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && PXF_BASE={{ oracle.base_work_dir }} /usr/local/{{ cbdb_pxf_version }}/bin/pxf cluster start )
   args:
     executable: /bin/bash
   register: pxf_cluster_oracle_started

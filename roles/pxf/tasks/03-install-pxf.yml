@@ -34,7 +34,7 @@
     group: gpadmin
     mode: 0755
   with_items:
-    - "{{ cbdb.base_dir }}/pxf-{{ pxf.cbdb_version }}"
+    - "{{ cbdb.base_dir }}/{{ cbdb_pxf_version }}"
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
 
 
@@ -45,14 +45,14 @@
     line: "{{ item }}"
     insertafter: EOF
   with_items:
-    - "export PATH=$PATH:/usr/local/pxf-{{ pxf.cbdb_version }}/bin"
+    - "export PATH=$PATH:/usr/local/{{ cbdb_pxf_version }}/bin"
     - "export JAVA_HOME={{ java_home }}"
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
 
 
 - name: Chown GPAmdin User for PXF Directory
   file:
-    dest: "{{ cbdb.base_dir }}/pxf-{{ pxf.cbdb_version }}"
+    dest: "{{ cbdb.base_dir }}/{{ cbdb_pxf_version }}"
     owner: gpadmin
     group: gpadmin
     mode: u=rwX,g=rX,o=rX
@@ -63,7 +63,7 @@
 - name: Change JAVA_HOME in PXF_HOME/conf/pxf-env.sh
   become_user: gpadmin
   lineinfile:
-    dest: /usr/local/pxf-{{ pxf.cbdb_version }}/conf/pxf-env.sh
+    dest: /usr/local/{{ cbdb_pxf_version }}/conf/pxf-env.sh
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: "{{ item.state }}"

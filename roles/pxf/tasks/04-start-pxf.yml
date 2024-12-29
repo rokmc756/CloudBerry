@@ -2,7 +2,7 @@
 - name: Export the PXF JAVA_HOME Setting and Run the PXF Cluster Init Command to Initialize the PXF Service on All cbdb Hosts
   become_user: gpadmin
   shell: |
-    source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && PXF_CONF=/usr/local/pxf-{{ pxf.cbdb_version }}/conf /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster register
+    source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && PXF_CONF=/usr/local/{{ cbdb_pxf_version }}/conf /usr/local/{{ cbdb_pxf_version }}/bin/pxf cluster register
   args:
     executable: /bin/bash
   register: init_pxf_cluster
@@ -15,11 +15,10 @@
   when: inventory_hostname in groups['master']
 
 
-# source /usr/local/{{ cbdb.pkg_name }}/greenplum_path.sh && export PXF_BASE=/usr/local/pxf-{{ pxf.cbdb_version }} && /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster sync
 - name: Synchronize the PXF Server Configuration to the CloudBerry Cluster
   become_user: gpadmin
   shell: |
-    source ~/.bashrc && /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster sync
+    source ~/.bashrc && /usr/local/{{ cbdb_pxf_version }}/bin/pxf cluster sync
   register: sync_pxf_cluster
   args:
     executable: /bin/bash
@@ -35,7 +34,7 @@
 - name: Run the PXF Cluster Start Command to Start PXF on Each Sgment Hosts
   become_user: gpadmin
   shell: |
-    source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster start
+    source ~/.bashrc && source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && export JAVA_HOME={{ java_home }} && /usr/local/{{ cbdb_pxf_version }}/bin/pxf cluster start
   async: 100
   poll: 3
   args:
@@ -64,7 +63,7 @@
 - name: Run the PXF Cluster Status Command to check PXF on Each Sgment Hosts
   become_user: gpadmin
   shell: |
-    source ~/.bashrc && /usr/local/pxf-{{ pxf.cbdb_version }}/bin/pxf cluster status
+    source ~/.bashrc && /usr/local/{{ cbdb_pxf_version }}/bin/pxf cluster status
   args:
     executable: /bin/bash
   register: status_pxf_cluster

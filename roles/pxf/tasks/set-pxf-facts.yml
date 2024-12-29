@@ -1,14 +1,16 @@
 ---
 - name: Get Network Interface name From Prefix of IP Addresses Provided for CloudBerry Nodes
   set_fact:
-    netdev0: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', gpcc.net.ipaddr0 ) | map(attribute='device') | first }}"
-    netdev1: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', gpcc.net.ipaddr1 ) | map(attribute='device') | first }}"
+    netdev0: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', cbdb.net.ipaddr0 ) | map(attribute='device') | first }}"
+    netdev1: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', cbdb.net.ipaddr1 ) | map(attribute='device') | first }}"
+    netdev2: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', cbdb.net.ipaddr2 ) | map(attribute='device') | first }}"
 
 
 - name: Get IP Address from Provided Network Device Name
   set_fact:
     ipaddr0: "{{ hostvars[inventory_hostname]['ansible_'~netdev0].ipv4.address }}"
     ipaddr1: "{{ hostvars[inventory_hostname]['ansible_'~netdev1].ipv4.address }}"
+    ipaddr2: "{{ hostvars[inventory_hostname]['ansible_'~netdev2].ipv4.address }}"
 
 
 #- name: Define Facts For All GPHOST's Hostname
@@ -54,12 +56,15 @@
     - "item | ansible.utils.ipaddr( cbdb_network_range )"
 
 
+# cloudberry-pxf-1.6.0-1.el9.x86_64.rpm
+
 - name: Set Java Home and PXF Package Version Info
   set_fact:
     java_home: "/usr/lib/jvm/jre-1.8.0"
     pxf_binary_type: "rpm"
     pxf_arch_type: "x86_64"
-    pxf_package_name: pxf-{{ pxf.cbdb_version }}-{{ pxf.major_version }}.{{ pxf.minor_version }}-{{ pxf.patch_version }}.{{ pxf.os_version }}.{{ pxf.arch_type }}.{{ pxf.binary_type }}
+    cbdb_pxf_version: cloudberry-pxf-{{ pxf.major_version }}.{{ pxf.minor_version }}.{{ pxf.patch_version }}
+    pxf_package_name: cloudberry-pxf-{{ pxf.major_version }}.{{ pxf.minor_version }}.{{ pxf.patch_version }}-{{ pxf.build_version }}.{{ pxf.os_version }}.{{ pxf.arch_type }}.{{ pxf.binary_type }}
   when:
     - inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
     - ( ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Rocky" )
@@ -70,7 +75,8 @@
     java_home: "/usr/lib/jvm/java-8-openjdk-amd64/jre"
     pxf_binary_type: "deb"
     pxf_arch_type: "amd64"
-    pxf_package_name: pxf-{{ pxf.cbdb_version }}-{{ pxf.major_version }}.{{ pxf.minor_version }}-{{ pxf.patch_version }}-{{ pxf.os_version }}-{{ pxf.arch_type }}.{{ pxf.binary_type }}
+    cbdb_pxf_version: cloudberry-pxf-{{ pxf.major_version }}.{{ pxf.minor_version }}.{{ pxf.patch_version }}
+    pxf_package_name: cloudberry-pxf-{{ pxf.major_version }}.{{ pxf.minor_version }}.{{ pxf.patch_version }}-{{ pxf.build_version }}.{{ pxf.os_version }}.{{ pxf.arch_type }}.{{ pxf.binary_type }}
   when:
     - inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
     - ( ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" )

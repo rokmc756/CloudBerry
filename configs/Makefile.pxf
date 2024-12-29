@@ -4,7 +4,7 @@ pxf:
 	elif [ "${r}" = "uninstall" ]; then\
 		ansible-playbook --ssh-common-args='-o UserKnownHostsFile=./known_hosts' -u ${USERNAME} setup-pxf.yml --tags='uninstall';\
 	else\
-		echo "No Actions for Installing and Uninstalling PXF";\
+		echo "No Actions for Installing and Uninstalling CloudBerry PXF";\
 		exit;\
 	fi
 
