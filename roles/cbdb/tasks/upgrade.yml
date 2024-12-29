@@ -1,0 +1,166 @@
+---
+- name: Check if cbdb link is Already Existed
+  stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  register: cbdb_linked
+
+
+- name: Check if the cbdb is Already Installed
+  stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}
+  register: cbdb_installed
+
+
+- name: Sanity Check for {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  fail: msg="{{ cbdb.base_dir }}/{{ cbdb.pkg_name }} is supposed to be a symlink!"
+  when: cbdb_linked.stat.exists == True and cbdb_linked.stat.islnk != True
+
+
+- name: Set Name for Binary Upgrade CloudBerry ( name includes build number )
+  set_fact:
+    binary_upgrade_file: "{{ cbdb.pkg_name }}-{{ upgrade.major_version }}.{{ upgrade.cbdb_minor_version }}.{{ upgrade.build_version }}-{{ upgrade.os_name }}-x86_64"
+    upgrade_path: "{{ cbdb.pkg_name }}-{{ upgrade.major_version }}.{{ upgrade.minor_version }}.{{ upgrade.build_version }}"
+  when: upgrade.build_version is defined and upgrade.build_version != None
+
+
+- name: Set Name for Binary Installer file ( Name does not Include Build Number )
+  set_fact:
+    binary_upgrade_file: "{{ cbdb.pkg_name }}-{{ upgrade.major_version }}.{{ upgrade.minor_version }}-{{ upgrade.os_name }}-x86_64"
+    upgrade_path: "{{ cbdb.pkg_name }}-{{ upgrade.major_version }}.{{ upgrade.minor_version }}"
+  when: upgrade.build_version is not defined or (upgrade.build_version is defined and upgrade.build_version == None)
+
+
+- name: Set default values for run mode variables
+  set_fact:
+    cbdb_upgrade: False
+    cbdb_linkchange: False
+
+
+# If {{ gpd.base_dir }}/{{ cbdb.pkg_name }}-{ new version } does not exists, it's an upgrade
+- name: Identify CloudBerry Database Upgrade
+  set_fact:
+    cbdb_upgrade: True
+  when: cbdb_linked.stat.exists == True and cbdb_installed.stat.exists != True
+
+
+# If the link points to a different existing directory, it's a link change
+- name: Identify CloudBerry Database Linkchange
+  set_fact:
+    cbdb_linkchange: True
+  when: ( cbdb_linked.stat.exists == True and cbdb_installed.stat.exists == True and cbdb_linked.stat.lnk_source != "{{ cbdb.base_dir }}/{{ cbdb.pkg_name }}-{{ upgrade.major_version }}.{{ upgrade.minor_version }}" )
+
+
+- name: Check if CloudBerry Database is Running
+  stat: path=/tmp/.s.PGSQL.5432
+  register: cbdb_running
+  when:
+    - inventory_hostname in groups['master']
+    - cbdb_upgrade == True or cbdb_linkchange == True
+- debug: msg={{ cbdb_running }}
+
+
+- name: Shutdown CloudBerry Database
+  become_user: gpadmin
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -a )
+  async: 60
+  poll: 5
+  register: database_shutdowned
+  when:
+   - inventory_hostname in groups['master']
+   - ( cbdb_upgrade == True or cbdb_linkchange == True ) and cbdb_running.stat.exists == True
+- debug: msg={{ database_shutdowned }}
+
+
+- name: Copy CloudBerry Database {{ upgrade.major_version }} {{ upgrade.binary_type }} Package
+  copy: src={{ binary_upgrade_file }}.rpm dest=/home/gpadmin/{{ binary_upgrade_file }}.rpm mode=0644 owner=gpadmin group=gpadmin
+  when:
+    - cbdb_upgrade == True or cbdb_linkchange == True
+    - upgrade.binary_type == 'rpm'
+
+
+- name: Install CloudBerry Database Software in {{ cbdb.base_dir }}
+  package:
+    name: /home/gpadmin/{{ binary_upgrade_file }}.rpm
+    state: latest
+  async: 60
+  poll: 5
+  register: cbdb_software_upgrade
+  when:
+    - cbdb_upgrade == True or cbdb_linkchange == True
+    - upgrade.binary_type == 'rpm'
+- debug: msg={{ cbdb_software_upgrade }}
+
+
+- name: Update the Permissions for the New Installation
+  become: true
+  file:
+    path: "{{ cbdb.base_dir }}/{{ upgrade_path }}"
+    state: directory
+    recurse: yes
+    owner: gpadmin
+    group: gpadmin
+  when:
+    - cbdb_upgrade == True or cbdb_linkchange == True
+
+
+- name: Replace Database Directory
+  replace:
+    path: "{{ cbdb.base_dir }}/{{ upgrade_path }}/greenplum_path.sh"
+    regexp: "^(.*)GPHOME=(.*)$"
+    replace: "GPHOME={{ cbdb.base_dir }}/{{ upgrade_path }}"
+    backup: yes
+  when:
+    - cbdb_upgrade == True or cbdb_linkchange == True
+    - inventory_hostname in groups['master'] or inventory_hostname in groups['standby']
+
+
+- name: Replace Source .bashrc in gpadmin Home Directory
+  become: true
+  replace:
+    path: /home/gpadmin/.bashrc
+    regexp: "^(.*)source(.*)$"
+    replace: "source {{ cbdb.base_dir }}/{{ upgrade_path }}/greenplum_path.sh"
+    backup: yes
+  when:
+    - cbdb_upgrade == True or cbdb_linkchange == True
+    - inventory_hostname in groups['master'] or inventory_hostname in groups['standby']
+
+
+- name: Delete a Symlink to Point the Old cbdb version
+  become: true
+  file:
+    path: "{{ cbdb.base_dir }}/{{ cbdb.pkg_name }}"
+    state: absent
+  when:
+    - cbdb_upgrade == True or cbdb_linkchange == True
+
+
+- name: Uupdate the Link to Point to the Newly Installed cbdb version
+  file: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }} src={{ cbdb.base_dir }}/{{ upgrade_path }} state=link
+  when:
+    - cbdb_upgrade == True or cbdb_linkchange == True
+
+
+# the greenplum_path.sh from the new installation does not have $MASTER_DATA_DIRECTORY
+- name: Add MASTER_DATA_DIRECTORY to greenplum_path.sh
+  lineinfile:
+    dest: "{{ cbdb.base_dir }}/{{ upgrade_path }}/greenplum_path.sh"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: '^export MASTER_DATA_DIRECTORY=', line: 'export MASTER_DATA_DIRECTORY={{ cbdb.data_dir }}/master/gpseg-1', state: present }
+  when:
+    - cbdb_upgrade == True or cbdb_linkchange == True
+
+
+- name: Start CloudBerry Database after Upgrade
+  become_user: gpadmin
+  shell: ( . {{ cbdb.base_dir }}/{{ upgrade_path }}/greenplum_path.sh && gpstart -a )
+  async: 60
+  poll: 5
+  register: cbdb_started
+  when:
+    - inventory_hostname in groups['master']
+    - cbdb_upgrade == True or cbdb_linkchange == True
+
+- debug: msg={{ cbdb_started }}
+

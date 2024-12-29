@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>jdbc.driver</name>
+        <value>oracle.jdbc.driver.OracleDriver</value>
+        <description>Class name of the JDBC driver</description>
+    </property>
+    <property>
+        <name>jdbc.url</name>
+        <value>jdbc:oracle:thin:@{{ hostvars[groups['databases'][0]]['ansible_eth0']['ipv4']['address'] }}:1521/{{ oracle.dbname }}</value>
+        <description>The URL that the JDBC driver can use to connect to the database</description>
+    </property>
+    <property>
+        <name>jdbc.user</name>
+        <value>{{ oracle.user }}</value>
+        <description>User name for connecting to the database</description>
+    </property>
+    <property>
+        <name>jdbc.password</name>
+        <value>{{ oracle.user_pass}}</value>
+        <description>Password for connecting to the database</description>
+    </property>
+</configuration>

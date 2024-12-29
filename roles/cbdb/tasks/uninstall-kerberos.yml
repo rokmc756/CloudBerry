@@ -1,0 +1,137 @@
+---
+- name: Verify that CloudBerry Database is Up and Running
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "SELECT VERSION()" )
+  args:
+    executable: /bin/bash
+  register: select_version
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Drop Database for Krb5 Users
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && dropdb "{{ freeipa.kerberos.database }}" )
+  args:
+    executable: /bin/bash
+  register: ldap_database_created
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Delete a Service for CloudBerry Master
+  shell: |
+    echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
+    ipa service-del postgres/{{ freeipa.client_fqdn }}.{{ freeipa.client_domain }}@{{ freeipa.client_realm }}
+    ipa host-del {{ freeipa.client_fqdn }}.{{ freeipa.client_domain }}
+  args:
+    executable: /bin/bash
+  register: cbdb_service_deleted
+  ignore_errors: true
+  when: inventory_hostname in groups['master']
+
+
+- name: Drop Role for Kerberos Users
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "DROP USER {{ item.username }}" )
+  args:
+    executable: /bin/bash
+  register: kerberos_users_dropped
+  with_items: "{{ freeipa.kerberos.users }}"
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Delte User in FreeIPA Server
+  shell: |
+    echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
+    echo {{ item.passwd }} | ipa user-del {{ item.username }}
+  args:
+    executable: /bin/bash
+  register: ipa_user_deleted
+  with_items: "{{ freeipa.kerberos.users }}"
+  when: inventory_hostname in groups['master']
+
+
+- name: Uninstall FreeIPA Client
+  shell: ipa-client-install --uninstall -U
+  args:
+    executable: /bin/bash
+  register: ipa_client_uninstalled
+  when: inventory_hostname in groups['master']
+
+
+# State is set to Absent to remove if the Searching Line is found
+- name: Remove krb5 Configuration File to Authenticate Kerberos User into CloudBerry Database
+  become_user: gpadmin
+  lineinfile:
+    path: "{{ cbdb.master_data_dir }}/{{ item.file }}"
+    regexp: "{{ item.regexp }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { file: "pg_hba.conf", regexp: "krb_realm", state: absent }
+  register: cbdb_krb5_config_removed
+  when: inventory_hostname in groups['master']
+
+
+- name: Disable keytab File Location Replacing It with Empty
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpconfig -c krb_server_keyfile -v  '' )
+  args:
+    executable: /bin/bash
+  register: ldap_database_created
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Remove keytab File
+  shell: |
+    rm -f {{ freeipa.kerberos.client_cbdb_keytab }}  {{ freeipa.kerberos.client_keytab }}
+  args:
+    executable: /bin/bash
+  register: keytabl_file_removed
+  when: inventory_hostname in groups['master']
+
+
+- name: Uninstall FreeIPA Client Package
+  package:
+    name: ipa-client
+    state: absent
+  async: 360
+  poll: 5
+  register: ipa_client_pkgs_uninstalled
+  when: inventory_hostname in groups['master']
+
+
+#- name: Add IP address of FreeIPA Server
+#  become: true
+#  lineinfile:
+#    dest: /etc/hosts
+#    line: "{{ freeipa.client_ipaddr }}   {{ freeipa.client_server }}  {{ ( freeipa.client_server | split('.') )[0] }}"
+#    state: present
+
+
+- name: Remove Hostname and IP Address Entries in /etc/hosts
+  lineinfile:
+    path: "{{ item.file }}"
+    regexp: "{{ item.regexp }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { file: "/etc/hosts", regexp: "{{ freeipa.client_server }}", state: absent }
+  register: hostname_ipaddr_entries_removed
+
+
+- name: Restart CloudBerry Database to Apply Changes
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
+  args:
+    executable: /bin/bash
+  register: cbdb_restarted
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+

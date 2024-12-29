@@ -1,0 +1,12 @@
+---
+- name: Check if Any Version of CloudBerry Database is Installed
+  stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  register: cbdb_installed
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments'] )
+
+
+- name: Sanity Check for {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  fail: msg="{{ cbdb.base_dir }}/{{ cbdb.pkg_name }} is not existed"
+  when:
+    - inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
+    - cbdb_installed.stat.exists != True or cbdb_installed.stat.islnk != True

@@ -1,0 +1,209 @@
+---
+# Destroy CloudBerry Database on Red Hat / CentOS / Rocky / Ubuntu / Debian
+# Uninstallation: {{ cbdb.base_dir }}/{{ cbdb.pkg_name }} must not exist
+# Unlinkchange: {{ cbdb.base_dir }} /{{ cbdb.pkg_name }} points to another directory
+
+- name: Create hostfile_all file for All Nodes
+  lineinfile:
+    path: "/tmp/hostfile_all"
+    line: "{{ hostvars[item]['ansible_hostname'] }}"
+    state: present
+    create: yes
+  register: hostfile_all_created
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+  when: ( inventory_hostname in groups['master'] )
+# when: ( ansible_hostname != "{{ item }}" or ansible_hostname == "{{ item }}" ) and ( inventory_hostname in groups['master'] and cbdb_install == True ) and ( cbdb_initdb_single == False or cbdb_initdb_with_standby == True )
+# - meta: end_play
+
+
+- name: Check if Any Version of CloudBerry Database is Already Linked
+  stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  register: cbdb_link_existed
+
+
+- name: Check if the CloudBerry Database Version is Already Installed
+  stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}
+  register: cbdb_dir_existed
+
+
+- name: Sanity Check for {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  fail: msg="CloudBerry Database Software is not existed"
+  when: cbdb_dir_existed.stat.exists != True or cbdb_link_existed.stat.islnk != True
+
+
+- name: Set Name for Binary Installer File ( Name Includes Build Number )
+  set_fact:
+    cbdb_dir: "{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}"
+    cbdb_package_name: "{{ cbdb.pkg_name }}-{{ cbdb.major_version }}"
+    binary_installer_file: "{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}-{{ cbdb.build_version }}.{{ cbdb.os_name }}-{{ cbdb.arch_name }}"
+
+
+# Non-existent {{ cbdb.base_dir }}/{{ cbdb.pkg_name }} is a new installation
+- name: Identify CloudBerry Database Uninstallation
+  set_fact:
+    cbdb_uninstall: True
+  when: cbdb_dir_existed.stat.exists == True and cbdb_link_existed.stat.exists == True
+
+
+# If the link points to a different existing directory, it's a link change
+- name: Identify CloudBerry Database Linkchange
+  set_fact:
+    cbdb_unlinkchange: True
+  when: cbdb_dir_existed.stat.exists == True and cbdb_link_existed.stat.exists == True
+
+
+- name: CloudBerry Database Uninstallation
+  debug: msg="Uninstall CloudBerry Database"
+  when: cbdb_uninstall == True
+
+
+- name: CloudBerry Database Linkchange
+  debug: msg="Delete link to CloudBerry Database version"
+  when: cbdb_unlinkchange == True
+
+
+- name: CloudBerry Database - Nothing to do
+  debug: msg="Nothing to do (Uo uninstall/delete link required)"
+  when: cbdb_uninstall == False and cbdb_unlinkchange == False
+
+
+# Database Uninstallation
+
+- name: Check if database is running
+  stat: path=/tmp/.s.PGSQL.5432
+  register: cbdb_running
+  when: inventory_hostname in groups['master'] and (  cbdb_uninstall == True or cbdb_unlinkchange == True )
+
+
+- name: Verify that CloudBerry Database is Up and Running
+  become: true
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "SELECT VERSION()" )
+  register: select_version
+  ignore_errors: true
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Shutdown CloudBerry Database
+  become_user: gpadmin
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -a )
+  async: 60
+  poll: 5
+  register: shutdown_database
+  ignore_errors: true
+  when: ( inventory_hostname in groups['master'] and cbdb_running.stat.exists == True ) and ( cbdb_uninstall == True and cbdb_unlinkchange == True )
+
+
+- name: Uninstall CloudBerry Database Software Package
+  package:
+    name: "{{ cbdb_package_name }}"
+    state: absent
+  ignore_errors: true
+  async: 60
+  poll: 5
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments'] ) and ( cbdb_uninstall == True and cbdb_unlinkchange == True )
+
+
+- name: Delete CloudBerry Database Directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  ignore_errors: true
+  with_items:
+    - "{{ cbdb.base_dir }}/{{ cbdb.pkg_name }}"
+    - "{{ cbdb.base_dir }}/{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}"
+   # when: ( cbdb_uninstall == True and cbdb_unlinkchange == True )
+
+
+- name: Delete {{ cbdb.master_data_dir }} for Master Data Directories
+  file:
+    path: "{{ cbdb.master_data_dir }}"
+    state: absent
+  ignore_errors: true
+  when: inventory_hostname in groups['master'] or inventory_hostname in groups['standby']
+  # when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and ( cbdb_uninstall == True and cbdb_unlinkchange == True )
+
+
+- name: Delete {{ cbdb.data_dir }} Segment Data Directories
+  file:
+    path: "{{ cbdb.data_dir }}/{{ item }}"
+    state: absent
+  ignore_errors: true
+  with_items:
+    - "primary"
+    - "mirror"
+    - ""
+# when: ( cbdb_uninstall == True or cbdb_unlinkchange == True )
+# when: inventory_hostname in groups['segments'] and ( cbdb_uninstall == True or cbdb_unlinkchange == True )
+
+
+- name: Delete gpinitsystem Config File and hostlist File
+  file:
+    path: "{{ item }}"
+    state: absent
+  ignore_errors: true
+  with_items:
+    - "/home/gpadmin/gpinitsystem_config"
+    - "/home/gpadmin/hostfile"
+    - "/home/gpadmin/hostfile_all"
+    - "/home/gpadmin/{{ binary_installer_file }}.{{ cbdb.binary_type }}"
+  when: inventory_hostname in groups['master'] and ( cbdb_uninstall == True or cbdb_unlinkchange == True )
+
+
+#- name: Delete ssh public keys in all hosts
+#  become_user: "{{ item }}"
+#  file:
+#    path: ~/.ssh/known_hosts
+#    state: absent
+#  with_items:
+#    - "gpadmin"
+#    - "root"
+#  when: cbdb_uninstall == True or cbdb_unlinkchange == True
+
+
+- name: Delete Sysctl File
+  file:
+    path: "/etc/sysctl.d/98-sysctl-cbdb.conf"
+    state: absent
+  ignore_errors: true
+  notify:
+    - Reload sysctl
+  when: ( cbdb_uninstall == True or cbdb_unlinkchange == True )
+
+
+# Need to check if it works
+- name: Enable and Start Iptables
+  service: name=iptables state=started enabled=yes
+  ignore_errors: true
+  changed_when: False
+  when: ( ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'Rocky' ) and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 6
+
+
+- name: Enable and Start Firewalld
+  service: name=firewalld state=started enabled=yes
+  ignore_errors: true
+  changed_when: False
+  when: ( ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'Rocky' ) and hostvars[inventory_hostname].ansible_distribution_major_version|int >= 7
+
+
+- name: Enable SELinux
+  selinux:
+    policy: targeted
+    state: enforcing
+  ignore_errors: true
+
+
+- name: CloudBerry Database Uninstallation
+  debug: msg="CloudBerry Database {{ cbdb.major_version }}.{{ cbdb.minor_version }} uninstalled"
+  when: cbdb_uninstall == True
+  ignore_errors: true
+  notify:
+    - Restart system
+    - Waiting for server to come back after reboot
+
+# Status: CloudBerry Database up and running
+# FIXME: update bash history
+

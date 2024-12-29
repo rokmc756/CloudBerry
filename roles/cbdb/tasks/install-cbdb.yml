@@ -1,0 +1,115 @@
+# Database installation
+#
+- name: Copy CloudBerry Database {{ cbdb.major_version }} {{ cbdb.binary_type }} File
+  copy: src={{ binary_installer_file }}.{{ cbdb.binary_type }} dest=/home/gpadmin/{{ binary_installer_file }}.{{ cbdb.binary_type }} mode=0644 owner=gpadmin group=gpadmin
+
+
+- name: Remove Old temp Installer Directory
+  file: path=/home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install state=absent
+  changed_when: False
+  when: cbdb_install == True
+
+
+- name: Create New Temp Installer Directory
+  file: path=/home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install state=directory owner=gpadmin group=gpadmin
+  changed_when: False
+  when: cbdb_install == True
+
+
+- block:
+  - name: Unzip CloudBerry Database {{ cbdb.major_version }} archive (Ansible < 2.2)
+    unarchive: src=/home/gpadmin/{{ binary_installer_file }}.zip dest=/home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install remote_src=yes copy=no owner=gpadmin group=gpadmin
+    when: ansible_version.full is version_compare('2.2.0.0', operator='<', strict=False)
+
+  - name: Unzip CloudBerry Database {{ cbdb.major_version }} archive (Ansible >= 2.2)
+    unarchive: src=/home/gpadmin/{{ binary_installer_file }}.zip dest=/home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install remote_src=yes owner=gpadmin group=gpadmin
+    when: ansible_version.full is version_compare('2.2.0.0', operator='>=', strict=False)
+
+  when: cbdb_install == True and (  cbdb.binary_type != 'rpm' and cbdb.binary_type != 'deb' )
+
+
+- name: Check if CloudBerry Database is Running
+  stat: path=/tmp/.s.PGSQL.5432
+  register: cbdb_running
+  when: inventory_hostname in groups['master']
+
+
+- name: Shutdown CloudBerry Database
+  become_user: gpadmin
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -a )
+  args:
+    executable: /bin/bash
+  async: 60
+  poll: 5
+  when: ( inventory_hostname in groups['master'] and cbdb_running.stat.exists == True )
+
+
+# This will only work on the first run
+# Note: You hereby accept the license! Please see installer for remaining questions.
+- name: Accept License and Make Unattended Installation Possible
+  lineinfile:
+    dest: /home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install/{{ binary_installer_file }}.bin
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+    backrefs: "{{ item.backrefs }}"
+  with_items:
+    - { regexp: '^more << EOF', line: 'cat << EOF', state: present, backrefs: no }
+    - { regexp: '^agreed=', line: 'agreed=1', state: present, backrefs: yes }
+    - { regexp: '^pathVerification=', line: 'pathVerification=1', state: present, backrefs: yes }
+    - { regexp: '^validMigrateDecision=', line: 'validMigrateDecision=1', state: present, backrefs: yes }
+    - { regexp: '^user_specified_installPath=', line: 'user_specified_installPath={{ cbdb.base_dir }}/{{ install_path }}', state: present, backrefs: yes }
+    - { regexp: '^installPath=', line: 'installPath={{ cbdb.base_dir }}/{{ install_path }}', state: present, backrefs: yes }
+    - { regexp: '^    agreed=', line: '    agreed=1', state: present, backrefs: yes }
+  when: ( inventory_hostname in groups['master'] and cbdb_install == True ) and ( cbdb.binary_type != 'rpm' and cbdb.binary_type != 'deb' )
+
+
+- name: Install CloudBerry Database Software Binary in {{ cbdb.base_dir }}
+  become_user: gpadmin
+  command: /home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install/{{ binary_installer_file }}.bin
+  async: 120
+  poll: 5
+  when: ( cbdb_install == True and cbdb.binary_type == 'zip' )
+
+
+- name: Enable EPEL
+  shell: |
+    dnf config-manager --enable epel
+  args:
+    executable: /bin/bash
+
+
+- name: Install CloudBerry Database Software RPM Package in {{ cbdb.base_dir }}
+  package:
+    name: /home/gpadmin/{{ binary_installer_file }}.{{ cbdb.binary_type }}
+    state: present
+    disable_gpg_check: yes
+  async: 360
+  poll: 5
+  when: ( cbdb_install == True and cbdb.binary_type == 'rpm' )
+
+
+- name: Install CloudBerry Database Software DEB Package in {{ cbdb.base_dir }}
+  apt:
+    deb: /home/gpadmin/{{ binary_installer_file }}.{{ cbdb.binary_type }}
+    state: present
+  async: 360
+  poll: 5
+  when: ( cbdb_install == True and cbdb.binary_type == 'deb' )
+
+
+- name: Remove Temp Installer Directory
+  file: path=/home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install state=absent
+  changed_when: False
+  when: ( cbdb_install == True and cbdb.binary_type == 'zip' )
+
+
+#- name: Check Again if the CloudBerry Database Version is Already Installed
+#  stat: path={{ cbdb.base_dir }}/{{ install_path }}
+#  register: cbdb_installed_verify
+#
+#
+#- name: Stop if CloudBerry Database Software is not Installed
+#  fail: msg="Installing CloudBerry Database Software is currently failed!"
+#  when: cbdb_installed_verify.stat.exists != True
+

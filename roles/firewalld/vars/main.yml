@@ -1,0 +1,32 @@
+_login_host: localhost
+_login_user: gpadmin
+_login_password: changeme
+_dbname: postgres
+
+master_ports:
+  - { "port" : "25", "proto" : "tcp" }
+  - { "port" : "587", "proto" : "tcp" }
+  - { "port" : "5432", "proto" : "tcp" }
+  - { "port" : "28080", "proto" : "tcp" }
+
+standby_ports:
+  - { "port" : "5432", "proto" : "tcp" }
+  - { "port" : "28080", "proto" : "tcp" }
+  - { "port" : "1025-65535", "proto" : "tcp" }
+
+segment_ports:
+  - { "port" : "5888", "proto" : "tcp" }
+
+common_ports:
+  - { "port" : "22", "proto" : "tcp" }
+  - { "port" : "111", "proto" : "tcp" }
+  - { "port" : "2051", "proto" : "tcp" }
+  - { "port" : "2049", "proto" : "tcp" }
+  - { "port" : "2052", "proto" : "tcp" }
+  - { "port" : "2188", "proto" : "tcp" }
+  - { "port" : "8080", "proto" : "tcp" }
+  - { "port" : "8888", "proto" : "tcp" }
+  - { "port" : "8899", "proto" : "tcp" }
+  - { "port" : "9000", "proto" : "tcp" }
+  - { "port" : "18983", "proto" : "tcp" }
+  - { "port" : "1025-65535", "proto" : "udp" }

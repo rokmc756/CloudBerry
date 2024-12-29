@@ -1,0 +1,6 @@
+
+[ rhel8 ]
+cbdb - ok
+pxf - ok
+
+[ rhel7 ]

@@ -1,0 +1,43 @@
+#
+#- hosts: rh8-master,rh8-slave
+#  become: true
+#  become_user: gpadmin
+#  roles:
+#    - { role: gpcc }
+
+#
+#- hosts: rh8-master
+#  become: true
+#  gather_facts: true
+#  roles:
+#    - { role: pgbouncer }
+
+#
+- hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - { role: gptext }
+#    - { role: cbdb }                 # Need to check if get_facts: true is required
+#    - { role: init-hosts }
+#    - { role: gpss }
+#    - { role: plcontainer }
+#    - { role: DataScienceR }
+#    - { role: DataSciencePython }
+#    - { role: postgis }
+#    - { role: pljava }
+#    - { role: plr }
+#    - { role: madlib }               # Failed on ubuntu 18.04
+#    - { role: pxf }
+#    - { role: cbdb }                 # Need to check if get_facts: true is required
+#    - { role: init-hosts }
+#    - { role: gpupgrade }
+
+#- hosts: rk9-minio
+#  become: true
+#  gather_facts: true
+#  vars:
+#    use_nginx: true
+#    minio_download: false
+#  roles:
+#    - { role: minio }                 # Need to check if get_facts: true is required

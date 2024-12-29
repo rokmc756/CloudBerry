@@ -1,0 +1,98 @@
+---
+# Install CloudBerry Database
+- name: Check OS ( cbdb )
+  fail: msg="{{ ansible_distribution }} is not supported for this ansible playbook!"
+  when: ansible_distribution != 'RedHat' or ansible_distribution != 'CentOS' or ansible_distribution != 'Rocky' or ansible_distribution != 'Debian' or ansible_distribution != 'Ubuntu'
+
+
+- name: Set Facts for CloudBerry Database
+  import_tasks: set-cbdb-facts.yml
+  tags:
+    - install
+    - uninstall
+  when: set_cbdb_facts == true
+
+
+- name: Check if CloudBerry Database is Installed Already
+  import_tasks: check-cbdb-installed.yml
+  tags:
+    - install
+    - uninstall
+  when: check_install_cbdb == true
+
+
+- name: Prepare OS Parameters
+  import_tasks: prepare-os-parameters.yml
+  tags: install
+  when: prepare_os_parameters == true
+
+
+- name: Install CloudBerry Database Software Binary
+  import_tasks: install-cbdb.yml
+  tags: install
+  when: install_cbdb == true
+
+
+- name: Initialize CloudBerry Database
+  import_tasks: init-cbdb.yml
+  tags: install
+  when: init_cbdb == true
+
+
+- name: Enable LDAP Authentication
+  import_tasks: enable-ldap.yml
+  tags: install
+  when: enable_ldap == true
+
+
+- name: Enable Resource Group
+  import_tasks: enable-resource-group.yml
+  tags: install
+  when: config_rg == true
+
+
+- name: Enable SSL
+  import_tasks: enable-ssl.yml
+  tags: install
+  when: enable_ssl == true
+
+
+- name: Enable Kerberos Authentication
+  import_tasks: enable-kerberos.yml
+  tags: install
+  when: enable_kerberos == true
+
+
+- name: Finalize CloudBerry Database
+  import_tasks: finalize-cbdb.yml
+  tags: install
+  when: finalize_cbdb == true
+
+
+- name: Uninstall LDAP Authentication
+  import_tasks: uninstall-ldap.yml
+  tags: uninstall
+  when: enable_ldap == true
+
+
+- name: Uninstall Kerberos Authentication
+  import_tasks: uninstall-kerberos.yml
+  tags: uninstall
+  when: enable_kerberos == true
+
+
+- name: Disable Resource Group
+  import_tasks: disable-resource-group.yml
+  tags: uninstall
+  when: config_rg == true
+
+
+- name: Uninstall CloudBerry Database
+  import_tasks: uninstall.yml
+  tags: uninstall
+
+
+- name: Upgrade CloudBerry Database
+  import_tasks: upgrade.yml
+  tags: upgrade
+

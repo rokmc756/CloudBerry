@@ -1,0 +1,150 @@
+---
+- name: Verify that CloudBerry Database is Up and Running
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "SELECT VERSION()" )
+  args:
+    executable: /bin/bash
+  register: select_version
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Install FreeIPA Client Package
+  package:
+    name: "{{ item }}"
+    state: present
+  async: 360
+  poll: 5
+  with_items:
+    - ipa-client
+    - nss-pam-ldapd
+  when: inventory_hostname in groups['master']
+
+
+- name: Enable and Start Systemd Service for Nscld Daemon
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    state: started
+    name: nslcd
+  register: nslcd_systemd_status
+  when: inventory_hostname in groups['master']
+
+
+- name: Add IP Address of FreeIPA Server
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ freeipa.client_ipaddr }}   {{ freeipa.client_server }}  {{ ( freeipa.client_server | split('.') )[0] }}"
+    state: present
+
+
+- name: Install FreeIPA Client
+  shell: |
+    echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
+    ipa-client-install --domain={{ freeipa.client_domain }} --server={{ freeipa.client_server }} --enable-dns-updates --principal={{ freeipa.admin_user }} --password={{ freeipa.admin_passwd }} --no-ntp -U
+  args:
+    executable: /bin/bash
+  register: freeipa_client_installed
+  when: inventory_hostname in groups['master']
+
+
+- name: Add Kerberos User into FreeIPA Server for CloudBerry Database Authentication
+  shell: |
+    echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
+    echo {{ item.passwd }} | ipa user-add {{ item.username }} --first={{ item.first_name }} --last={{ item.last_name }} --password
+    echo {{ item.passwd }} | ipa user-mod {{ item.username }} --password-expiration="2033-10-22 23:50:00Z"
+  args:
+    executable: /bin/bash
+  register: kerberos_user_added
+  with_items: "{{ freeipa.kerberos.users }}"
+  when: inventory_hostname in groups['master']
+
+
+- name: Add Service for CloudBerry Database into FreeIPA Server
+  shell: |
+    echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
+    ipa service-add postgres/{{ freeipa.client_fqdn }}.{{ freeipa.client_domain }}@{{ freeipa.client_realm }}
+  args:
+    executable: /bin/bash
+  register: cbdb_service_added
+  when: inventory_hostname in groups['master']
+
+
+- name: Get Keytab File for CloudBerry Database Service from FreeIPA Server
+  shell: |
+    echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
+    ipa-getkeytab -s {{ freeipa.client_server }} -p postgres/{{ freeipa.client_fqdn }}.{{ freeipa.client_domain }}@{{ freeipa.client_realm }} -k {{ freeipa.kerberos.client_keytab }}
+  args:
+    executable: /bin/bash
+  register: cbdb_keytab_got
+  when: inventory_hostname in groups['master']
+
+
+- name: Copy Keytab File, Change File Name and Change Permission and Ownership of Keytab File
+  shell: |
+    cp {{ freeipa.kerberos.client_keytab }} {{ freeipa.kerberos.client_cbdb_keytab }}
+    chmod 0400 {{ freeipa.kerberos.client_cbdb_keytab }}
+    chown gpadmin:gpadmin {{ freeipa.kerberos.client_cbdb_keytab }}
+  args:
+    executable: /bin/bash
+  register: cbdb_keytab_changed
+  when: inventory_hostname in groups['master']
+
+
+- name: Enable the Location of Keytab File to Enable Kerberos Authentication
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpconfig -c krb_server_keyfile -v  "{{ freeipa.kerberos.client_cbdb_keytab }}" )
+  args:
+    executable: /bin/bash
+  register: krb5_keytab_enabled
+  with_items: "{{ freeipa.kerberos.users }}"
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Add Kerberos Configuration to Authenticate Kerberos User into CloudBerry Database
+  become_user: gpadmin
+  lineinfile:
+    dest: "{{ cbdb.master_data_dir }}/{{ item.file }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { file: "pg_hba.conf",     line: "host  all  all  192.168.0.0/24  gss  include_realm=0  krb_realm={{ freeipa.client_realm  }}",           state: present }
+  register: cbdb_krb5_config
+  when: inventory_hostname in groups['master']
+
+
+- name: Create Role for Kerberos Users
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "CREATE USER {{ item.username }}" )
+  args:
+    executable: /bin/bash
+  register: krb5_users_added
+  with_items: "{{ freeipa.kerberos.users }}"
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Create Database for Kerberos Users
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && createdb "{{ freeipa.kerberos.database }}" )
+  args:
+    executable: /bin/bash
+  register: krb5_database_created
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Restart CloudBerry Database to Apply Changes
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
+  args:
+    executable: /bin/bash
+  register: cbdb_restarted
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"

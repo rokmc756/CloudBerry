@@ -1,0 +1,49 @@
+---
+- name: Check if Any Version of CloudBerry Database is Already Installed
+  stat: path={{ cbdb.base_dir }}/{{ link_path }}
+  register: cbdb_link_existed
+
+
+- name: Check if the CloudBerry Database Version is Already Installed
+  stat: path={{ cbdb.base_dir }}/{{ install_path }}
+  register: cbdb_dir_existed
+
+
+- name: Sanity Check for {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  fail: msg="{{ cbdb.base_dir }}/cloudberry-db is supposed to be a symlink!"
+  when: cbdb_link_existed.stat.exists == True and cbdb_link_existed.stat.islnk != True
+
+
+- name: Set Default Values for Run Mode Variables
+  set_fact:
+    cbdb_install: False
+    cbdb_linkchange: False
+
+
+- name: Identify CloudBerry Database Installation
+  set_fact:
+    cbdb_install: True
+  when: cbdb_dir_existed.stat.exists != True and cbdb_dir_existed.stat.exists != True
+
+
+# If the link points to a different existing directory, it's a link change
+- name: Identify CloudBerry Database Linkchange
+  set_fact:
+    cbdb_linkchange: True
+  when: cbdb_link_existed.stat.exists != True
+
+
+- name: CloudBerry Database Installation
+  debug: msg="New CloudBerry Database installation"
+  when: cbdb_install == True
+
+
+- name: CloudBerry Database Link Change
+  debug: msg="Changing link to CloudBerry Database version"
+  when: cbdb_linkchange == True
+
+
+- name: CloudBerry Database - Nothing to do
+  debug: msg="Nothing to do (no installation/upgrade required)"
+  when: cbdb_install == False and cbdb_linkchange == False
+

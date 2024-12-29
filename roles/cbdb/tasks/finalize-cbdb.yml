@@ -1,0 +1,40 @@
+---
+- name: Add the Path of CloudBerry Database Variable file into .bashrc
+  become_user: gpadmin
+  lineinfile:
+    dest: /home/gpadmin/.bashrc
+    line: "source /usr/local/{{ cbdb.pkg_name }}/greenplum_path.sh"
+    state: present
+
+
+- name: Verify that CloudBerry Database is Up and Running
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "SELECT VERSION()" )
+  args:
+    executable: /bin/bash
+  register: select_version
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: Change gpadmin password to Check Remote Login via SSL
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "alter user gpadmin with password 'changeme'" )
+  args:
+    executable: /bin/bash
+  register: gpadmin_password_changed
+  when: inventory_hostname in groups['master']
+  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+
+
+- name: CloudBerry Database Installation
+  debug: msg="CloudBerry Database {{ install_path }} installed"
+  when: cbdb_install == True
+
+
+- name: CloudBerry Database Version switched
+  debug: msg="CloudBerry Database {{ install_path }} is active"
+  when: cbdb_linkchange == True
+

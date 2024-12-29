@@ -1,0 +1,18 @@
+---
+- hosts: all
+  become: true
+  gather_facts: yes
+  vars:
+    check_install_cbdb: true
+    set_cbdb_facts: true
+    prepare_os_parameters: true
+    install_cbdb: true
+    init_cbdb: true
+    config_rg: true
+    enable_ssl: true
+    finalize_cbdb: true
+    enable_ldap: false
+    enable_kerberos: false
+  roles:
+    - { role: cbdb }                 # Need to check if get_facts: true is required
+
