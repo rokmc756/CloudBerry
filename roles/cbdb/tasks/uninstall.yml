@@ -118,9 +118,9 @@
    # when: ( cbdb_uninstall == True and cbdb_unlinkchange == True )
 
 
-- name: Delete {{ cbdb.master_data_dir }} for Master Data Directories
+- name: Delete {{ cbdb.coordinator_data_dir }} for Master Data Directories
   file:
-    path: "{{ cbdb.master_data_dir }}"
+    path: "{{ cbdb.coordinator_data_dir }}"
     state: absent
   ignore_errors: true
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['standby']

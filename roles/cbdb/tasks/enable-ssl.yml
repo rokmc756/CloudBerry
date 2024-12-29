@@ -50,7 +50,7 @@
 
 - name: Add SSL Configuration File to Authenticate SSL User into CloudBerry Database
   lineinfile:
-    dest: "{{ cbdb.master_data_dir }}/{{ item.file }}"
+    dest: "{{ cbdb.coordinator_data_dir }}/{{ item.file }}"
     line: "{{ item.line }}"
     state: "{{ item.state }}"
   with_items:

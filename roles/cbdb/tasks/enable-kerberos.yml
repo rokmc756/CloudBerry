@@ -107,7 +107,7 @@
 - name: Add Kerberos Configuration to Authenticate Kerberos User into CloudBerry Database
   become_user: gpadmin
   lineinfile:
-    dest: "{{ cbdb.master_data_dir }}/{{ item.file }}"
+    dest: "{{ cbdb.coordinator_data_dir }}/{{ item.file }}"
     line: "{{ item.line }}"
     state: "{{ item.state }}"
   with_items:

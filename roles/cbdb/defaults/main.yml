@@ -26,7 +26,7 @@ freeipa:
     users:
       - { username: gpuser,  passwd: changeme, first_name: GPadmin , last_name: Moon }
 ssl:
-  dir: "{{ cbdb.master_data_dir }}"
+  dir: "{{ cbdb.coordinator_data_dir }}"
   days: 3660
   country: "KR"
   state: "Seoul"

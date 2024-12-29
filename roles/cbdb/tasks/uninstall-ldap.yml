@@ -70,7 +70,7 @@
 - name: Remove LDAP Configuration File to Authenticate LDAP User into CloudBerry Database
   become_user: gpadmin
   lineinfile:
-    path: "{{ cbdb.master_data_dir }}/{{ item.file }}"
+    path: "{{ cbdb.coordinator_data_dir }}/{{ item.file }}"
     regexp: "{{ item.regexp }}"
     state: "{{ item.state }}"
   with_items:

@@ -9,7 +9,7 @@ cbdb:
   admin_user: "gpadmin"
   admin_passwd: "changeme"
   admin_home_dir: "/home/gpadmin"
-  master_data_dir: "/data/master/gpseg-1"
+  coordinator_data_dir: "/data/coordinator/gpseg-1"
   data_dir: "/data"
   major_version: 1
   minor_version: 6

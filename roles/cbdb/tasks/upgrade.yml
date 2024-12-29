@@ -139,17 +139,18 @@
     - cbdb_upgrade == True or cbdb_linkchange == True
 
 
-# the greenplum_path.sh from the new installation does not have $MASTER_DATA_DIRECTORY
-- name: Add MASTER_DATA_DIRECTORY to greenplum_path.sh
+# the greenplum_path.sh from the new installation does not have $COORDINATOR_DATA_DIRECTORY
+- name: Add COORDINATOR_DATA_DIRECTORY to greenplum_path.sh
   lineinfile:
     dest: "{{ cbdb.base_dir }}/{{ upgrade_path }}/greenplum_path.sh"
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: "{{ item.state }}"
   with_items:
-    - { regexp: '^export MASTER_DATA_DIRECTORY=', line: 'export MASTER_DATA_DIRECTORY={{ cbdb.data_dir }}/master/gpseg-1', state: present }
+    - { regexp: '^export COORDINATOR_DATA_DIRECTORY=', line: 'export COORDINATOR_DATA_DIRECTORY={{ cbdb.data_dir }}/coordinator/gpseg-1', state: present }
   when:
     - cbdb_upgrade == True or cbdb_linkchange == True
+  # - { regexp: '^export MASTER_DATA_DIRECTORY=', line: 'export MASTER_DATA_DIRECTORY={{ cbdb.data_dir }}/master/gpseg-1', state: present }
 
 
 - name: Start CloudBerry Database after Upgrade

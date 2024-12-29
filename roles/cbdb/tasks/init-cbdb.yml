@@ -103,15 +103,13 @@
   with_items:
     - { regexp: '^MACHINE_LIST_FILE=', line: 'MACHINE_LIST_FILE=/home/gpadmin/hostfile', state: present }
     - { regexp: '^declare -a DATA_DIRECTORY=', line: 'declare -a DATA_DIRECTORY=({{ data_dirs }} )', state: present }
-    - { regexp: '^MASTER_HOSTNAME=', line: 'MASTER_HOSTNAME={{ ansible_hostname }}', state: present }
-    - { regexp: '^MASTER_DIRECTORY=', line: 'MASTER_DIRECTORY={{ cbdb.data_dir }}/master', state: present }
     - { regexp: '^#?DATABASE_NAME=', line: 'DATABASE_NAME=gpadmin', state: present }
-    - { regexp: '^COORDINATOR_HOSTNAME=', line: "COODINATOR_HOSTNAME={{ hostvars[groups['master'][0]]['ansible_hostname'] }}", state: present }
-    - { regexp: '^COORDINATOR_DIRECTORY=', line: 'MASTER_DIRECTORY={{ cbdb.data_dir }}/master', state: present }
+    - { regexp: '^COORDINATOR_HOSTNAME=', line: "COORDINATOR_HOSTNAME={{ hostvars[groups['master'][0]]['ansible_hostname'] }}", state: present }
+    - { regexp: '^COORDINATOR_DIRECTORY=', line: 'COORDINATOR_DIRECTORY={{ cbdb.data_dir }}/coordinator', state: present }
     - { regexp: '^SEG_PREFIX=', line: 'SEG_PREFIX=gpseg', state: present }
     - { regexp: '^#declare -a MIRROR_DATA_DIRECTORY=', line: 'declare -a MIRROR_DATA_DIRECTORY=({{ mirror_data_dirs }} )', state: present }
     - { regexp: '^MIRROR_PORT_BASE=', line: 'MIRROR_PORT_BASE=7000', state: present }
-  when: ( inventory_hostname in groups['master'] and cbdb_install == True )
+  when: inventory_hostname in groups['master'] and cbdb_install == True
 
 
 - name: Change Permission of CloudBerry Database Directory
@@ -132,8 +130,6 @@
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
 
 
-# Status: Config files ready, initialize database if required.
-# Check if the 'known_hosts' file exists - this is taken as sign that the ssh key exchange happened before. that is not very reliable
 - name: Check if the SSH Login for gpadmin is Already Setup
   stat: path=/home/gpadmin/.ssh/known_hosts
   register: ssh_initialized_gpadmin
@@ -156,10 +152,10 @@
   when: cbdb_initialized.stat.exists != True or cbdb_initialized.stat.exists == True
 
 
-- name: Create {{ cbdb.data_dir }}/master Directories for Master and Standby
+- name: Create {{ cbdb.data_dir }}/coordinator Directories for Master and Standby
   file: path={{ item.path }} state=directory owner=gpadmin group=gpadmin mode=0770
   with_items:
-    - { path: '{{ cbdb.data_dir }}/master' }
+    - { path: '{{ cbdb.data_dir }}/coordinator' }
   when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and ( cbdb_initialized.stat.exists != True or cbdb_initialized.stat.exists == True )
 
 
@@ -188,10 +184,6 @@
   # changed_when: False
   when: inventory_hostname in groups['master'] and ( cbdb_initialized.stat.exists != True and cbdb.initdb_single == False and cbdb.seg_serialized_install == True )
 
-# pip2 install pip
-# python -m pip install --upgrade pip
-# python -m pip install psutil
-
 
 - name: Initialize CloudBerry Database Cluster
   become_user: gpadmin
@@ -217,8 +209,7 @@
   failed_when: init_db.rc > 1
 
 
-# the greenplum_path.sh from the new installation does not have $MASTER_DATA_DIRECTORY
-- name: Add MASTER_DATA_DIRECTORY to greenplum_path.sh
+- name: Add COORDINATOR_DATA_DIRECTORY to greenplum_path.sh
   become_user: gpadmin
   lineinfile:
     dest: "{{ cbdb.base_dir }}/{{ install_path }}/greenplum_path.sh"
@@ -226,7 +217,7 @@
     line: "{{ item.line }}"
     state: "{{ item.state }}"
   with_items:
-    - { regexp: '^export MASTER_DATA_DIRECTORY=', line: 'export MASTER_DATA_DIRECTORY={{ cbdb.master_data_dir }}', state: present }
+    - { regexp: '^export COORDINATOR_DATA_DIRECTORY=', line: 'export COORDINATOR_DATA_DIRECTORY={{ cbdb.coordinator_data_dir }}', state: present }
   when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and ( cbdb_install == True or cbdb_linkchange == True )
 
 

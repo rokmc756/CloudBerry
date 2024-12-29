@@ -24,9 +24,9 @@ do
         rpm -e --allmatches  open-source-cloudberry-db-6-6.26.1-1.el7.x86_64 > /dev/null 2>&1;
         rpm -e --allmatches greenplum-disaster-recovery > /dev/null 2>&1;
         dpkg -r cloudberry-db-6 > /dev/null 2>&1;
-        rm -rf /home/gpadmin/greenplum*.zip /home/gpadmin/greenplum*.rpm /data/master/* /data/primary/* /data/mirror/* \
-        /usr/local/cloudberrydb* /usr/local/cloudberry-db* /tmp/.s.PGSQL.* \
-        /data/master/gpsne-1 /data/primary/gpsne{0..9} /data/mirror/gpsne{0..9} /data/master/gpsne-1 /data/primary/gpsne{0..9} /data/mirror/gpsne{0..9};
+        rm -rf /home/gpadmin/greenplum*.zip /home/gpadmin/greenplum*.rpm /data/master /data/primary /data/mirror /home/gpadmin/gpinitsystem_config \
+        /usr/local/cloudberrydb* /usr/local/cloudberry-db* /tmp/.s.PGSQL.* /data/coordinator \
+        /data/master/gpsne-1 /data/primary/gpsne{0..9} /data/mirror/gpsne{0..9} /data/coodinator /data/master /data/master/gpsne-1 /data/primary/gpsne{0..9} /data/mirror/gpsne{0..9};
         killall postgres python > /dev/null 2>&1;
         rm -f /etc/cgconfig.d/cbdb.conf;
         echo "" > /etc/sysctl.conf;
