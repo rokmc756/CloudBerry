@@ -1,5 +1,5 @@
 ---
-- name: Add CloudBerry Standby Master  Database
+- name: Add CloudBerry Standby Master Database
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpinitstandby -D -a -s {{ hostvars[groups['standby'][0]]['ansible_hostname'] }} )
   args:
