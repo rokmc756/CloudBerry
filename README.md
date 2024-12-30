@@ -1,5 +1,5 @@
 ## CloudBerry Database Arichtecture
-![alt text](https://github.com/rokmc756/GPFarmer/blob/main/roles/cbdb/images/cbdb_architecture.png)
+![alt text](https://github.com/rokmc756/CloudBerry/blob/main/roles/cbdb/images/cbdb-architecture.png)
 
 ## What is CloudBerry?
 Cloudberry Database, built on the latest PostgreSQL 14.4 kernel, is one of the most advanced and mature open-source MPP databases available.
