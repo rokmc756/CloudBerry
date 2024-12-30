@@ -73,7 +73,20 @@ rk9-node04 ansible_ssh_host=192.168.1.74
 rk9-node05 ansible_ssh_host=192.168.1.75
 ```
 
-#### 4) Configure variables for CBDB
+#### 4) Prepare Linux Hosts installing Prerequistes Packages and Add Admin User in order to deploy CloudBerry Database
+```yaml
+$ vi init-hosts.yml
+---
+- hosts: all
+  become: true
+  gather_facts: yes
+  roles:
+    - { role: init-hosts }
+
+$ make hosts r=init
+```
+
+#### 5) Configure CBDB Global Variables
 ```yaml
 $ vi group_vars/all.yml
 ansible_ssh_pass: "changeme"
@@ -157,7 +170,7 @@ vmware:
   esxi_password: "Changeme34#$"
 ```
 
-#### 9) Configure order of roles in CloudBerry Anisble Playbook and Deploy CBDB and Extentions
+#### 6) Configure Ansible Roles and Deploy CBDB and Extentions by Playbook
 ```yaml
 $ vi setup-common.yml
 ---
@@ -185,8 +198,7 @@ $ make cbdb r=install s=standby
 $ make cbdb r=install s=rg
 
 $ make cbdb r=install s=tls
-
-``
+```
 
 ## Planning
 Change CentOS and Rocky Linux repository into local mirror in Korea\
