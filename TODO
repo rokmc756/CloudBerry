@@ -60,9 +60,7 @@ Comments
 <https://github.com/cloudberry-db/cbdb|cloudberry-db/cbdb>cloudberry-db/cbdb | Dec 27th | Added by GitHub
 
 
-
-
-
 Jack Moon 12:21 PM
 cbdb_install FACT 변수로 변경할것
 수행시 실패가 되게 되면 바이너리 설치이후에  실패가 되면 cbdb_install 변수가 휘발성으로 날라가서 True 를 기억하지 못함
+
