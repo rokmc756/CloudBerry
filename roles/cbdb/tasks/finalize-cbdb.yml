@@ -15,7 +15,7 @@
     executable: /bin/bash
   register: select_version
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: Change gpadmin password to Check Remote Login via SSL
@@ -26,7 +26,7 @@
     executable: /bin/bash
   register: gpadmin_password_changed
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: CloudBerry Database Installation

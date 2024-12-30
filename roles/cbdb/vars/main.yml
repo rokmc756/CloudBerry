@@ -1,37 +1,37 @@
 ---
 common_cbdb_kernel_parameters:
-  - { "state": "present",  "param" : "kernel.shmmax",                             "value" : "{{ shmmax_var }}" }
-  - { "state": "present",  "param" : "kernel.shmmni",                             "value" : "4096" }
-  - { "state": "present",  "param" : "kernel.shmall",                             "value" : "{{ shmall_var }}" }
-  - { "state": "present",  "param" : "kernel.sem",                                "value" : "250 512000 100 2048" }
-  - { "state": "present",  "param" : "kernel.msgmnb",                             "value" : "65536" }
-  - { "state": "present",  "param" : "kernel.msgmax",                             "value" : "65536" }
-  - { "state": "present",  "param" : "kernel.msgmni",                             "value" : "2048" }
-  - { "state": "present",  "param" : "kernel.sysrq",                              "value" : "1" }
-  - { "state": "present",  "param" : "kernel.core_uses_pid",                      "value" : "1" }
-  - { "state": "present",  "param" : "net.core.rmem_max",                         "value" : "2097152" }
-  - { "state": "present",  "param" : "net.core.wmem_max",                         "value" : "2097152" }
-  - { "state": "present",  "param" : "vm.overcommit_memory",                      "value" : "2" }
-  - { "state": "present",  "param" : "net.ipv4.ip_forward",                       "value" : "0" }
-  - { "state": "present",  "param" : "net.ipv4.tcp_syncookies",                   "value" : "1" }
-  - { "state": "present",  "param" : "net.core.netdev_max_backlog",               "value" : "10000" }
-  - { "state": "present",  "param" : "net.ipv4.tcp_max_syn_backlog",              "value" : "4096" }
-  - { "state": "present",  "param" : "net.ipv4.conf.all.arp_filter",              "value" : "1" }
-  - { "state": "present",  "param" : "net.ipv6.conf.all.disable_ipv6",            "value" : "0" }
-  - { "state": "present",  "param" : "net.ipv4.conf.default.accept_source_route", "value" : "0" }
-  - { "state": "present",  "param" : "net.ipv4.ip_local_port_range",              "value" : "10000    65535" }
-  - { "state": "present",  "param" : "net.ipv4.conf.all.arp_filter",              "value" : "1" }
-  - { "state": "present",  "param" : "net.core.netdev_max_backlog",               "value" : "10000" }
-  - { "state": "present",  "param" : "vm.swappiness",                             "value" : "10" }
-  - { "state": "present",  "param" : "vm.zone_reclaim_mode",                      "value" : "0" }
-  - { "state": "present",  "param" : "vm.dirty_expire_centisecs",                 "value" : "500" }
-  - { "state": "present",  "param" : "vm.dirty_writeback_centisecs",              "value" : "100" }
-  - { "state": "present",  "param" : "vm.dirty_background_ratio",                 "value" : "0" }
-  - { "state": "present",  "param" : "vm.dirty_ratio",                            "value" : "0" }
-  - { "state": "present",  "param" : "vm.dirty_background_bytes",                 "value" : "1610612736" }
-  - { "state": "present",  "param" : "vm.dirty_bytes",                            "value" : "4294967296" }
-  - { "state": "present",  "param" : "vm.overcommit_ratio",                       "value" : "95" }
+  - { state: "present",  param : "kernel.shmmax",                             value : "{{ shmmax_var }}" }
+  - { state: "present",  param : "kernel.shmmni",                             value : "4096" }
+  - { state: "present",  param : "kernel.shmall",                             value : "{{ shmall_var }}" }
+  - { state: "present",  param : "kernel.sem",                                value : "250 512000 100 2048" }
+  - { state: "present",  param : "kernel.msgmnb",                             value : "65536" }
+  - { state: "present",  param : "kernel.msgmax",                             value : "65536" }
+  - { state: "present",  param : "kernel.msgmni",                             value : "2048" }
+  - { state: "present",  param : "kernel.sysrq",                              value : "1" }
+  - { state: "present",  param : "kernel.core_uses_pid",                      value : "1" }
+  - { state: "present",  param : "net.core.rmem_max",                         value : "2097152" }
+  - { state: "present",  param : "net.core.wmem_max",                         value : "2097152" }
+  - { state: "present",  param : "vm.overcommit_memory",                      value : "2" }
+  - { state: "present",  param : "net.ipv4.ip_forward",                       value : "0" }
+  - { state: "present",  param : "net.ipv4.tcp_syncookies",                   value : "1" }
+  - { state: "present",  param : "net.core.netdev_max_backlog",               value : "10000" }
+  - { state: "present",  param : "net.ipv4.tcp_max_syn_backlog",              value : "4096" }
+  - { state: "present",  param : "net.ipv4.conf.all.arp_filter",              value : "1" }
+  - { state: "present",  param : "net.ipv6.conf.all.disable_ipv6",            value : "0" }
+  - { state: "present",  param : "net.ipv4.conf.default.accept_source_route", value : "0" }
+  - { state: "present",  param : "net.ipv4.ip_local_port_range",              value : "10000    65535" }
+  - { state: "present",  param : "net.ipv4.conf.all.arp_filter",              value : "1" }
+  - { state: "present",  param : "net.core.netdev_max_backlog",               value : "10000" }
+  - { state: "present",  param : "vm.swappiness",                             value : "10" }
+  - { state: "present",  param : "vm.zone_reclaim_mode",                      value : "0" }
+  - { state: "present",  param : "vm.dirty_expire_centisecs",                 value : "500" }
+  - { state: "present",  param : "vm.dirty_writeback_centisecs",              value : "100" }
+  - { state: "present",  param : "vm.dirty_background_ratio",                 value : "0" }
+  - { state: "present",  param : "vm.dirty_ratio",                            value : "0" }
+  - { state: "present",  param : "vm.dirty_background_bytes",                 value : "1610612736" }
+  - { state: "present",  param : "vm.dirty_bytes",                            value : "4294967296" }
+  - { state: "present",  param : "vm.overcommit_ratio",                       value : "95" }
 
 rhel7_cbdb_kernel_parameters:
-  - { "state": "present",  "param" : "net.ipv4.tcp_tw_recycle",                   "value" : "1" }
+  - { state: "present",  param : "net.ipv4.tcp_tw_recycle",                   value : "1" }
 

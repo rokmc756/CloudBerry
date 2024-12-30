@@ -1,8 +1,7 @@
 ---
-# Install CloudBerry Database
-- name: Check OS ( cbdb )
-  fail: msg="{{ ansible_distribution }} is not supported for this ansible playbook!"
-  when: ansible_distribution != 'RedHat' or ansible_distribution != 'CentOS' or ansible_distribution != 'Rocky' or ansible_distribution != 'Debian' or ansible_distribution != 'Ubuntu'
+- name: Check OS ( CBDB )
+  fail: msg="{{ ansible_distribution }} is not Supported for This Ansible Playbook!"
+  when: ansible_distribution != 'RedHat' or ansible_distribution != 'CentOS' or ansible_distribution != 'Rocky'
 
 
 - name: Set Facts for CloudBerry Database
@@ -10,7 +9,7 @@
   tags:
     - install
     - uninstall
-  when: set_cbdb_facts == true
+    - prepare
 
 
 - name: Check if CloudBerry Database is Installed Already
@@ -18,81 +17,88 @@
   tags:
     - install
     - uninstall
-  when: check_install_cbdb == true
+    - prepare
 
 
 - name: Prepare OS Parameters
   import_tasks: prepare-os-parameters.yml
-  tags: install
-  when: prepare_os_parameters == true
+  tags: prepare
 
 
 - name: Install CloudBerry Database Software Binary
   import_tasks: install-cbdb.yml
   tags: install
-  when: install_cbdb == true
+  when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Initialize CloudBerry Database
   import_tasks: init-cbdb.yml
   tags: install
-  when: init_cbdb == true
+  when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
-- name: Enable LDAP Authentication
-  import_tasks: enable-ldap.yml
+- name: Add CloudBerry Standby Master Database
+  import_tasks: init-stadnby-cbdb.yml
   tags: install
-  when: enable_ldap == true
-
-
-- name: Enable Resource Group
-  import_tasks: enable-resource-group.yml
-  tags: install
-  when: config_rg == true
+  when: ( standby is defined and standby == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Enable SSL
   import_tasks: enable-ssl.yml
   tags: install
-  when: enable_ssl == true
+  when: ( tls is defined and tls == true ) or ( cbdb_all is defined and cbdb_all == true )
+
+
+- name: Enable LDAP Authentication
+  import_tasks: enable-ldap.yml
+  tags: install
+  when: ( ldap is defined and ldap == true ) or ( cbdb_all is defined and cbdb_all == true )
+
+
+- name: Enable Resource Group
+  import_tasks: enable-resource-group.yml
+  tags: install
+  when: ( rg is defined and rg == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Enable Kerberos Authentication
   import_tasks: enable-kerberos.yml
   tags: install
-  when: enable_kerberos == true
+  when: ( krb5 is defined and krb5 == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Finalize CloudBerry Database
   import_tasks: finalize-cbdb.yml
   tags: install
-  when: finalize_cbdb == true
+  when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Uninstall LDAP Authentication
   import_tasks: uninstall-ldap.yml
   tags: uninstall
-  when: enable_ldap == true
+  when: ( ldap is defined and ldap == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Uninstall Kerberos Authentication
   import_tasks: uninstall-kerberos.yml
   tags: uninstall
-  when: enable_kerberos == true
+  when: ( krb5 is defined and krb5 == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Disable Resource Group
   import_tasks: disable-resource-group.yml
   tags: uninstall
-  when: config_rg == true
+  when: ( rg is defined and rg == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Uninstall CloudBerry Database
   import_tasks: uninstall.yml
   tags: uninstall
+  when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Upgrade CloudBerry Database
   import_tasks: upgrade.yml
   tags: upgrade
+  when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 

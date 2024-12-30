@@ -1,0 +1,63 @@
+---
+- name: Add CloudBerry Standby Master  Database
+  become_user: gpadmin
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpinitstandby -D -a -s {{ hostvars[groups['standby'][0]]['ansible_hostname'] }} )
+  args:
+    executable: /bin/bash
+  async: 600
+  poll: 5
+  register: init_db
+  when: inventory_hostname in groups['master'] and cbdb.initdb_with_standby == True
+  failed_when: init_db.rc > 1
+
+
+- name: Add COORDINATOR_DATA_DIRECTORY to greenplum_path.sh
+  become_user: gpadmin
+  lineinfile:
+    dest: "{{ cbdb.base_dir }}/{{ install_path }}/greenplum_path.sh"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: '^export COORDINATOR_DATA_DIRECTORY=', line: 'export COORDINATOR_DATA_DIRECTORY={{ cbdb.coordinator_data_dir }}', state: present }
+  when: ( inventory_hostname in groups['standby'] ) and ( cbdb_install == True or cbdb_linkchange == True )
+
+
+- name: Restart CloudBerry Database after Initialization
+  become_user: gpadmin
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
+  async: 60
+  poll: 5
+  when: inventory_hostname in groups['master'] and ( cbdb_install == True or cbdb_linkchange == True )
+
+
+- name: Check if CloudBerry Database is Running
+  stat: path=/tmp/.s.PGSQL.5432
+  register: cbdb_running_nothing
+  when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True )
+
+
+- name: Validate if CBDB Standby Master is Running Normally
+  become_user: gpadmin
+  shell: |
+    source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstate -f | grep "WAL Sender State:" | cut -d ' ' -f 5
+  register: check_cbdb_standby_master
+  until: check_cbdb_standby_master.stdout.find("streaming") != 1
+  retries: 20
+  delay: 10
+  args:
+    chdir: "{{ cbdb.admin_home_dir }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True )
+- debug: msg={{ check_cbdb_standby_master }}
+  when: print_debug == true and inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True )
+
+
+#- name: Start CloudBerry Database
+#  become_user: gpadmin
+#  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstart -a )
+#  async: 60
+#  poll: 5
+#  when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True and cbdb_running_nothing.stat.exists != True )
+

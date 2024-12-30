@@ -2,38 +2,38 @@
 - name: Check if SSL Directory Already Exists
   stat: path={{ ssl.dir }}
   register: check_dir_sslkey_installed
-  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and enable_ssl == True
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] )
 
 
 - name: Create SSL Directory
   file: path={{ ssl.dir }} state=directory owner=gpadmin group=gpadmin
   changed_when: False
   register: dir_sslkey_installed
-  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and ( check_dir_sslkey_installed.stat.exists != True and enable_ssl == True )
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and ( check_dir_sslkey_installed.stat.exists != True )
 
 
-- name: Create SSL Key to Connect into CloudBerry Database
+- name: Create SSL Key to Connect into Greenplum Database
   shell: ( openssl req -newkey rsa:2048 -x509 -keyout {{ ssl.dir }}/cert.pem -new -text -out {{ ssl.dir }}/server.req -days {{ ssl.days }} -nodes -subj "/C={{ ssl.country }}/ST={{ ssl.state }}/L={{ ssl.location }}/O={{ ssl.organization }}/CN={{ ssl.common_name }}/emailAddress={{ ssl.email }}" )
   args:
     executable: /bin/bash
-  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and enable_ssl == True
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] )
 
 
 - name: xxxxx
   shell: ( openssl rsa -in {{ ssl.dir }}/cert.pem -out {{ ssl.dir }}/server.key )
   args:
     executable: /bin/bash
-  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and enable_ssl == True
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] )
 
 
-- name: Turn the certificate into a self-signed certificate so that the server will look for them.
+- name: Turn the Certificate into a Self-Signed Certificate
   shell: ( openssl req -x509 -in {{ ssl.dir }}/server.req -key {{ ssl.dir }}/server.key -new -text -out {{ ssl.dir }}/server.crt -days {{ ssl.days }} -nodes -subj "/C={{ ssl.country }}/ST={{ ssl.state }}/L={{ ssl.location }}/O={{ ssl.organization }}/CN={{ ssl.common_name }}/emailAddress={{ ssl.email }}" )
   args:
     executable: /bin/bash
-  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and enable_ssl == True
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] )
 
 
-- name: Change Permission of SSL Key Files to Login CloudBerry Database via SSL
+- name: Change Permission of SSL Key Files to Login Greenplum Database via SSL
   file:
     path: "{{ ssl.dir }}/{{ item }}"
     state: file
@@ -48,7 +48,7 @@
   when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] )
 
 
-- name: Add SSL Configuration File to Authenticate SSL User into CloudBerry Database
+- name: Add SSL Configuration File to Authenticate SSL User into Greenplum Database
   lineinfile:
     dest: "{{ cbdb.coordinator_data_dir }}/{{ item.file }}"
     line: "{{ item.line }}"
@@ -57,6 +57,15 @@
     - { file: "pg_hba.conf",     line: "hostssl  all         all           0.0.0.0/0         md5",           state: present }
     - { file: "postgresql.conf", line: "ssl = on",           state: present }
   register: ssl_postgres_config
-  when:
-    - ( inventory_hostname in groups['master'] and enable_ssl == True and cbdb.initdb_with_standby == True ) or ( inventory_hostname in groups['standby'] and cbdb.initdb_with_standby == True and enable_ssl == True )
+  when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and cbdb.initdb_with_standby == True
+
+
+- name: Apply New Changes for SSL Connection
+  become_user: gpadmin
+  changed_when: False
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
+  args:
+    executable: /bin/bash
+  register: rs_applied
+  when: inventory_hostname in groups['master']
 

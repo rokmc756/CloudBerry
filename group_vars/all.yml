@@ -78,3 +78,15 @@ vmware:
   esxi_username: "root"
   esxi_password: "Changeme34#$"
 
+
+#ssl:
+#  dir: "/data/coordinator/gpseg-1"
+#  days: 3660
+#  country: "KR"
+#  state: "Seoul"
+#  location: "Guro"
+#  organization: "Pivotal"
+#  organization_unit: "Global Support Service"
+#  common_name: "jtest.pivotal.io"
+#  email: "jomoon@pivotal.io"
+

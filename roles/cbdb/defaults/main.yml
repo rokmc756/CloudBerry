@@ -25,6 +25,7 @@ freeipa:
     client_keytab_fullpath: /etc/krb5.keytab
     users:
       - { username: gpuser,  passwd: changeme, first_name: GPadmin , last_name: Moon }
+
 ssl:
   dir: "{{ cbdb.coordinator_data_dir }}"
   days: 3660
@@ -32,5 +33,7 @@ ssl:
   state: "Seoul"
   location: "Guro"
   organization: "Pivotal"
+  organization_unit: "Global Support Service"
   common_name: "jtest.pivotal.io"
   email: "jomoon@pivotal.io"
+

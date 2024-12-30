@@ -1,3 +1,4 @@
+---
 - name: Get Network Interface name From Prefix of IP Addresses Provided for CloudBerry Nodes
   set_fact:
     netdev0: "{{ ansible_interfaces | map('regex_replace', '^', 'ansible_') | map('extract', vars) | selectattr('ipv4', 'defined') | selectattr('ipv4.address', 'match', cbdb.net.ipaddr0 ) | map(attribute='device') | first }}"
@@ -12,7 +13,6 @@
     ipaddr2: "{{ hostvars[inventory_hostname]['ansible_'~netdev2].ipv4.address }}"
 
 
-# https://stackoverflow.com/questions/36328907/ansible-get-all-the-ip-addresses-of-a-group
 - name: Define Facts For All GPHOST's Hostname
   set_fact:
     all_ext1_hostnames: "{{ groups['all'] | map('extract', hostvars, ['ansible_hostname']) | join(' ') }}"
@@ -29,40 +29,6 @@
   set_fact:
     _netdev: "{{ 'ansible_'~ netdev1 }}"
     _ipaddr: "{{ ipaddr1 }}"
-
-
-#- name: Set Default Values for Run Mode Variables
-#  set_fact:
-#    cbdb_install: False
-#    cbdb_linkchange: False
-#
-#
-#- name: Identify CloudBerry Database Installation
-#  set_fact:
-#    cbdb_install: True
-#  when: cbdb_dir_existed.stat.exists != True and cbdb_dir_existed.stat.exists != True
-#
-#
-## If the link points to a different existing directory, it's a link change
-#- name: Identify CloudBerry Database Linkchange
-#  set_fact:
-#    cbdb_linkchange: True
-#  when: cbdb_link_existed.stat.exists != True
-#
-#
-#- name: CloudBerry Database Installation
-#  debug: msg="New CloudBerry Database installation"
-#  when: cbdb_install == True
-#
-#
-#- name: CloudBerry Database Link Change
-#  debug: msg="Changing link to CloudBerry Database version"
-#  when: cbdb_linkchange == True
-#
-#
-#- name: CloudBerry Database - Nothing to do
-#  debug: msg="Nothing to do (no installation/upgrade required)"
-#  when: cbdb_install == False and cbdb_linkchange == False
 
 
 - name: Set Name for Binary Installer File ( Name Includes Build Number )
@@ -116,6 +82,7 @@
     shmmax_var: "{{ shmmax_fact.stdout }}"
 
 
-- debug: msg={{ shmall_var }}
-- debug: msg={{ shmmax_var }}
+# - debug: msg={{ shmall_var }}
+# - debug: msg={{ shmmax_var }}
+
 

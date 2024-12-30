@@ -1,31 +1,23 @@
 ## CloudBerry Database Arichtecture
 ![alt text](https://github.com/rokmc756/GPFarmer/blob/main/roles/cbdb/images/greenplum_architecture.webp)
 
-## What is GPFarmer?
-GPFarmer is ansible playbook to deploy CloudBerry Database conveniently on Baremetal, Virtual Machines and Cloud Infrastructure.
-It provide also many extensions to install such GPText, madlib, GPCC, postgis as well. The main purpose of this project is actually
-very simple. Because i have many jobs to install different kind of cbdb versions and reproduce issues & test features  as a support
-engineer. I just want to spend less time for it.
+## What is CloudBerry?
+Cloudberry Database, built on the latest PostgreSQL 14.4 kernel, is one of the most advanced and mature open-source MPP databases available.
+It comes with multiple features, including high concurrency and high availability. It can perform quick and efficient computing for complex tasks,
+meeting the demands of managing and computing vast amounts of data.
 
-If you are working with cbdb such as Developer, Administrator, Field Engineer or Data Scientist you could also use it very useful with
-saving time.
-
-## Where is GPFarmer from and how is it changed?
+## Where is CloudBerry from and How is it changed?
 GPFarmer has been developing based on cbdb-ansible project - https://github.com/andreasscherbaum/cbdb-ansible. Andreas! Thanks for sharing it.
 Since it only provide install cbdb on a single host GPFarmer support multiple hosts and many extensions to deploy them and support two binary type, rpm and bin.
 
 ## Supported cbdb and extension version
-* cbdb 4.x, 5.x, 6.x, 7.x
-* GPCC 4x, 6x, 7.x
-* GPTEXT 3.x.x
-* madlib 1.x, 2.x
-* postgis 2.x
+* CBDB 1.6.x
 
 ## Supported Platform and OS
 * Virtual Machines
 * Baremetal
 * RHEL / CentOS / Rocky Linux 5.x,6.x,7.x,8.x,9.x
-* Ubuntu 18.04
+
 
 ## Prerequisite
 MacOS or Fedora/CentOS/RHEL should have installed ansible as ansible host.
@@ -47,11 +39,11 @@ $ sudo yum install ansible
 ## Prepareing OS
 Configure Yum / Local & EPEL Repostiory
 
-## Download / configure / run GPFarmer
+## Download / configure / run CloudBerry
 #### 1) Clone GPFarmer ansible playbook and go to that directory
 ```
-$ git clone https://github.com/rokmc756/GPFarmer
-$ cd GPFarmer
+$ git clone https://github.com/rokmc756/CloudBerry
+$ cd CloudBerry
 ```
 
 #### 2) Configure password for sudo user in VMs where cbdb would be deployed
@@ -62,7 +54,7 @@ ANSIBLE_TARGET_PASS="changeme"  # # It should be changed with password of sudo u
 ```
 
 #### 3) Configure inventory for hostname, ip address, username and user's password
-```
+```yaml
 $ vi ansible-hosts
 [all:vars]
 ssh_key_filename="id_rsa"
@@ -70,37 +62,39 @@ remote_machine_username="jomoon"
 remote_machine_password="changeme"
 
 [master]
-rh7-master ansible_ssh_host=192.168.0.71
+rk9-node01 ansible_ssh_host=192.168.1.71
 
 [standby]
-rh7-slave ansible_ssh_host=192.168.0.72
+rk9-node02 ansible_ssh_host=192.168.1.72
 
 [segments]
-rh7-node01 ansible_ssh_host=192.168.0.73
-rh7-node02 ansible_ssh_host=192.168.0.74
-rh7-node03 ansible_ssh_host=192.168.0.75
-
-[kafka_brokers]
-co7-node01 ansible_ssh_host=192.168.0.63
-co7-node02 ansible_ssh_host=192.168.0.64
-co7-node03 ansible_ssh_host=192.168.0.65
+rk9-node03 ansible_ssh_host=192.168.1.73
+rk9-node04 ansible_ssh_host=192.168.1.74
+rk9-node05 ansible_ssh_host=192.168.1.75
 ```
 
-#### 4) Configure variables for cbdb
-```
-$ vi role/cbdb/var/main.yml
----
+#### 4) Configure variables for CBDB
+```yaml
+$ vi group_vars/all.yml
+ansible_ssh_pass: "changeme"
+ansible_become_pass: "changeme"
+
 cbdb:
-  master_data_dir: /data/master/gpseg-1
-  data_dir: /data
-  base_dir: /usr/local
-  admin_user: gpadmin
-  admin_passwd: changeme
-  package_name: cloudberry-db
-  major_version: 6
-  minor_version: 25.3
-  build_version:
-  os_name: 'rhel7'
+  # pkg_name: "cloudberrydb" # for 1.5.x
+  pkg_name: "cloudberry-db" # for 1.6.x
+  cluster_name: jack-kr-cbdb
+  base_dir: "/usr/local"
+  admin_user: "gpadmin"
+  admin_passwd: "changeme"
+  admin_home_dir: "/home/gpadmin"
+  coordinator_data_dir: "/data/coordinator/gpseg-1"
+  data_dir: "/data"
+  major_version: 1
+  minor_version: 6
+  patch_version: 0
+  build_version: 1
+  os_name: 'el9'
+  # os_name: 'rl9'
   arch_name: 'x86_64'
   binary_type: 'rpm'
   number_segments: 4
@@ -109,163 +103,93 @@ cbdb:
   initdb_single: False
   initdb_with_standby: True
   seg_serialized_install: False
-~~ snip
+  domain: "jtest.pivotal.io"
+  repo_url: ""
+  download_url: ""
+  download: false
+  base_path: /root
+  host_num: "{{ groups['all'] | length }}"
+  cgroup: v1
+  metric_major_version: 6
+  metric_minor_version: 26.0
+  metric_build_version:
+  net:
+    type: "virtual"                # Or Physical
+    gateway: "192.168.0.1"
+    ipaddr0: "192.168.0.7"
+    ipaddr1: "192.168.1.7"
+    ipaddr2: "192.168.2.7"
+  client:
+    net:
+      type: "virtual"              # Or Physical
+      cores: 1
+      ipaddr0: "192.168.0.6"
+      ipaddr1: "192.168.1.6"
+      ipaddr2: "192.168.2.6"
+  ext_storage:
+    net:
+      ipaddr0: "192.168.0."
+      ipaddr1: "192.168.1."
+
+
+jdk:
+  oss:
+    install: true
+    jvm_home: "/usr/lib/jvm"
+    major_version: 1
+    minor_version: 8
+    patch_version: 0
+    # 1.8.0
+    # 11.0.4
+    # 17.0.2
+  oracle:
+    install: false
+    jvm_home: "/usr/lib/jvm"
+    major_version: 13
+    minor_version: 0
+    patch_version: 2
+    download: false
+
+
+vmware:
+  esxi_hostname: "192.168.0.231"
+  esxi_username: "root"
+  esxi_password: "Changeme34#$"
 ```
 
-#### 5) Configure variables for GPText
-```
-$ vi role/gpcc/var/main.yml
----
-cbdb_major_version: 6
-cbdb_minor_version: 23.0
-cbdb_build_version:
-gpcc_major_version: 6
-gpcc_minor_version: 8.4
-
-cbdb_metric_major_version: 6
-cbdb_metric_minor_version: 23.0
-cbdb_metric_build_version:
-gpcc_metric_arch: 'x86_64'
-gpcc_os_name: 'rhel8'
-
-gpccws_port: 28080
-gpmon_password: "changeme"
-master_data_dir: "/data/master/gpseg-1"
-~~ snip
-```
-
-#### 6) Configure variables for GPText
-```
-$ vi role/gptext/var/main.yml
----
-# greenplum-text-3.3.1-rhel7_x86_64.tar.gz
-# greenplum-text-3.9.1-rhel8_x86_64.tar.gz
-gptext_major_version: 3
-gptext_minor_version: 9.1
-gptext_patch_version:
-gptext_build_version:
-gptext_cbdb_version:
-gptext_java_version: 1.8.0
-gptext_rhel_name: rhel8
-gptext_database_name: gptext_testdb
-gptext_all_hosts: "rk8-master rk8-slave rk8-node01 rk8-node02 rk8-node03"
-```
-
-#### 7) Configure variables for MADLib
-```
-$ vi role/madlib/var/main.yml
----
-madlib_prefix_major_version:
-madlib_major_version: 1
-madlib_minor_version: 21
-madlib_patch_version: 0
-madlib_build_version: 1
-madlib_cbdb_version: 6
-madlib_os_version: rhel8
-madlib_arch_type: x86_64
-madlib_database_name: madlib_testdb
-madlib_mdw_hostname: rk8-master
-~~ snip
-```
-
-#### 8) Configure variables for PostGIS
-```
-$ vi role/postgis/var/mail.yml
----
-postgis_prefix_major_version:
-postgis_major_version: 2
-postgis_minor_version: 5
-postgis_patch_version: .4+pivotal.8.build.1
-postgis_cbdb_version: 6
-postgis_os_version: rhel8
-postgis_database_name: postgis_testdb
-postgis_schema_name: postgis_test_scheme
-postgis_mdw_hostname: rk8-master
-```
-
-#### 9) Configure order of roles in GPFarmer anisble playbook and deploy cbdb and extentions
-```
-$ vi setup-host.yml
+#### 9) Configure order of roles in CloudBerry Anisble Playbook and Deploy CBDB and Extentions
+```yaml
+$ vi setup-common.yml
 ---
 - hosts: all
   become: true
   roles:
-   - { role: init-hosts }
+   - { role: common }
+
+$ make cbdb r=install s=common
+
+$ vi setup-cbdb.yml
+---
+- hosts: all
+  become: true
+  roles:
    - { role: cbdb }
-   - { role: madlib }
-   - { role: postgis }
-   - { role: pljava }
-   - { role: plcontainer }
-   - { role: DataSciencePython }
-   - { role: DataScienceR }
-   - { role: pxf }
-   - { role: gptext }
-   - { role: plr }
 
-- hosts: rk8-master,rk8-slave
-  become: true
-  become_user: gpadmin
-  roles:
-    - { role: gpcc }
 
-$ make install
-```
-#### 10) Configure order of roles in GPFarmer anisble playbook and upgrade cbdb
-```
-$ vi install-hosts.yml
----
-- hosts: all
-  become: true
-  become_user: gpadmin
-  roles:
-    - { role: cbdb }
+$ make cbdb r=prepare
 
-$ vi roles/cbdb/var/main.yml
-~~ snip
-upgrade:
-  major_version: 6
-  minor_version: 25.3
-  build_version:
-  os_name: 'rhel7'
-  arch_name: 'x86_64'
-  binary_type: 'rpm'
-~~ snip
+$ make cbdb r=install s=db
 
-$ make upgrade
-```
+$ make cbdb r=install s=standby
 
-#### 11) Configure order of roles in GPFarmer anisble playbook and destroy cbdb and extentions
-```
-$ vi uninstall-host.yml
----
-- hosts: rk8-master,rk8-slave
-  become: true
-  become_user: gpadmin
-  roles:
-    - { role: gpcc }
+$ make cbdb r=install s=rg
 
-- hosts: all
-  become: true
-  roles:
-   - { role: plr }
-   - { role: gptext }
-   - { role: pxf }
-   - { role: DataScienceR }
-   - { role: DataSciencePython }
-   - { role: plcontainer }
-   - { role: pljava }
-   - { role: postgis }
-   - { role: madlib }
-   - { role: cbdb }
-   - { role: init-hosts }
+$ make cbdb r=install s=tls
 
-$ make uninstall
-```
+``
 
 ## Planning
 Change CentOS and Rocky Linux repository into local mirror in Korea\
 Converting Makefile.init from original project\
-Adding GPCR role\
 Adding SELinux role\
 Adding tuned role\
-Adding gpupgrade

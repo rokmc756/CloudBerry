@@ -5,5 +5,5 @@
   vars:
     print_debug: true
   roles:
-    - { role: cbdb }                 # Need to check if get_facts: true is required
+    - { role: common }                 # Need to check if get_facts: true is required
 
