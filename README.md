@@ -200,6 +200,21 @@ $ make cbdb r=install s=rg
 $ make cbdb r=install s=tls
 ```
 
+
+#### 7) Configure PXF Roles and Deploy PXF Extentions by Ansible Playbook
+```yaml
+$ vi setup-pxf.yml
+---
+- hosts: all
+  become: true
+  gather_facts: yes
+  roles:
+    - { role: pxf }
+
+$ make pxf r=install
+```
+
+
 ## Planning
 Change CentOS and Rocky Linux repository into local mirror in Korea\
 Converting Makefile.init from original project\

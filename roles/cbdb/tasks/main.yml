@@ -1,5 +1,5 @@
 ---
-- name: Check OS ( CBDB )
+- name: Check OS ( CloudBerry Database )
   fail: msg="{{ ansible_distribution }} is not Supported for This Ansible Playbook!"
   when: ansible_distribution != 'RedHat' or ansible_distribution != 'CentOS' or ansible_distribution != 'Rocky'
 
