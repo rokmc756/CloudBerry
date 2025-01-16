@@ -48,7 +48,7 @@
   become_user: root
   shell: |
     keytool -delete  -alias {{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }} -keystore {{ java_home }}/lib/security/cacerts -storepass changeme
-    rm -f /etc/pki/ca-trust/source/anchors/{{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.jtest.pivotal.io.crt
+    rm -f /etc/pki/ca-trust/source/anchors/{{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.{{ cbdb.domain }}.crt
     update-ca-trust
   args:
     executable: /bin/bash

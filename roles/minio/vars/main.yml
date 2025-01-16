@@ -10,9 +10,9 @@ minio:
   ssl_country: "KR"
   ssl_state: "Seoul"
   ssl_location: "GangNam"
-  ssl_organization: "Pivotal"
-  ssl_common_name: "jtest.pivotal.io"
-  ssl_email: "jomoon@pivotal.io"
+  ssl_organization: "Futurfusion"
+  ssl_common_name: "{{ cbdb.domain }}"
+  ssl_email: "jomoon@futurfusion"
 # SSL Key configuration
 
 # allow_world_readable_tmpfiles: true

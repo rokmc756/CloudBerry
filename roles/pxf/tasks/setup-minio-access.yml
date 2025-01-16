@@ -139,9 +139,9 @@
   become: true
   become_user: root
   shell: |
-    openssl x509 -in <(openssl s_client -connect {{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.jtest.pivotal.io:9000 -prexit 2>/dev/null) -out /root/{{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.jtest.pivotal.io.crt
-    keytool -importcert -file /root/{{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.jtest.pivotal.io.crt -alias {{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }} -keystore {{ java_home }}/lib/security/cacerts -storepass changeme
-    mv -f /root/{{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.jtest.pivotal.io.crt /etc/pki/ca-trust/source/anchors/
+    openssl x509 -in <(openssl s_client -connect {{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.{{ cbdb.domain }}:9000 -prexit 2>/dev/null) -out /root/{{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.{{ cbdb.domain }}.crt
+    keytool -importcert -file /root/{{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.{{ cbdb.domain }}.crt -alias {{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }} -keystore {{ java_home }}/lib/security/cacerts -storepass changeme
+    mv -f /root/{{ hostvars[groups['s3_storage'][0]]['ansible_hostname'] }}.{{ cbdb.domain }}.crt /etc/pki/ca-trust/source/anchors/
     update-ca-trust
   args:
     executable: /bin/bash

@@ -16,7 +16,7 @@ Since it only provide install cbdb on a single host GPFarmer support multiple ho
 ## Supported Platform and OS
 * Virtual Machines
 * Baremetal
-* RHEL / CentOS / Rocky Linux 5.x,6.x,7.x,8.x,9.x
+* RHEL / CentOS / Rocky Linux 9.x
 
 
 ## Prerequisite
@@ -62,28 +62,20 @@ remote_machine_username="jomoon"
 remote_machine_password="changeme"
 
 [master]
-rk9-node01 ansible_ssh_host=192.168.1.71
+rk9-node01 ansible_ssh_host=192.168.2.191
 
 [standby]
-rk9-node02 ansible_ssh_host=192.168.1.72
+rk9-node02 ansible_ssh_host=192.168.2.192
 
 [segments]
-rk9-node03 ansible_ssh_host=192.168.1.73
-rk9-node04 ansible_ssh_host=192.168.1.74
-rk9-node05 ansible_ssh_host=192.168.1.75
+rk9-node03 ansible_ssh_host=192.168.2.193
+rk9-node04 ansible_ssh_host=192.168.2.194
+rk9-node05 ansible_ssh_host=192.168.2.195
 ```
 
 #### 4) Prepare Linux Hosts installing Prerequistes Packages and Add Admin User in order to deploy CloudBerry Database
 ```yaml
-$ vi init-hosts.yml
----
-- hosts: all
-  become: true
-  gather_facts: yes
-  roles:
-    - { role: init-hosts }
-
-$ make hosts r=init
+$ make hosts r=init s=all
 ```
 
 #### 5) Configure CBDB Global Variables
@@ -93,8 +85,7 @@ ansible_ssh_pass: "changeme"
 ansible_become_pass: "changeme"
 
 cbdb:
-  # pkg_name: "cloudberrydb" # for 1.5.x
-  pkg_name: "cloudberry-db" # for 1.6.x
+  pkg_name: "cloudberry-db" # for 1.6.x ,  pkg_name: "cloudberrydb" # for 1.5.x
   cluster_name: jack-kr-cbdb
   base_dir: "/usr/local"
   admin_user: "gpadmin"
@@ -116,7 +107,7 @@ cbdb:
   initdb_single: False
   initdb_with_standby: True
   seg_serialized_install: False
-  domain: "jtest.pivotal.io"
+  domain: "jtest.futurfusion.io"
   repo_url: ""
   download_url: ""
   download: false
@@ -128,21 +119,22 @@ cbdb:
   metric_build_version:
   net:
     type: "virtual"                # Or Physical
-    gateway: "192.168.0.1"
-    ipaddr0: "192.168.0.7"
-    ipaddr1: "192.168.1.7"
-    ipaddr2: "192.168.2.7"
+    gateway: "192.168.2.1"
+    ipaddr0: "192.168.0.19"
+    ipaddr2: "192.168.2.19"
   client:
     net:
       type: "virtual"              # Or Physical
       cores: 1
-      ipaddr0: "192.168.0.6"
-      ipaddr1: "192.168.1.6"
-      ipaddr2: "192.168.2.6"
+      ipaddr0: "192.168.0.19"
+      ipaddr2: "192.168.2.19"
   ext_storage:
     net:
       ipaddr0: "192.168.0."
-      ipaddr1: "192.168.1."
+  vms:
+    rk9: [ "rk9-freeipa", "rk9-node01", "rk9-node02", "rk9-node03", "rk9-node04", "rk9-node05" ]
+    ubt24: [ "rk9-freeipa", "ubt24-node01", "ubt24-node02", "ubt24-node03", "ubt24-node04", "ubt24-node05" ]
+  debug_opt: ""  # --debug
 
 
 jdk:
@@ -168,26 +160,18 @@ vmware:
   esxi_hostname: "192.168.0.231"
   esxi_username: "root"
   esxi_password: "Changeme34#$"
+
+
+kvm:
+  hostname: "192.168.0.101"
+  username: "root"
+  password: "changeme"
 ```
 
 #### 6) Configure Ansible Roles and Deploy CBDB and Extentions by Playbook
 ```yaml
-$ vi setup-common.yml
----
-- hosts: all
-  become: true
-  roles:
-   - { role: common }
 
 $ make cbdb r=install s=common
-
-$ vi setup-cbdb.yml
----
-- hosts: all
-  become: true
-  roles:
-   - { role: cbdb }
-
 
 $ make cbdb r=prepare
 
@@ -203,14 +187,6 @@ $ make cbdb r=install s=tls
 
 #### 7) Configure PXF Roles and Deploy PXF Extentions by Ansible Playbook
 ```yaml
-$ vi setup-pxf.yml
----
-- hosts: all
-  become: true
-  gather_facts: yes
-  roles:
-    - { role: pxf }
-
 $ make pxf r=install
 ```
 
@@ -219,4 +195,4 @@ $ make pxf r=install
 Change CentOS and Rocky Linux repository into local mirror in Korea\
 Converting Makefile.init from original project\
 Adding SELinux role\
-Adding tuned role\
+Adding tuned role

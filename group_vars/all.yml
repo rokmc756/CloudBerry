@@ -2,8 +2,7 @@ ansible_ssh_pass: "changeme"
 ansible_become_pass: "changeme"
 
 cbdb:
-  # pkg_name: "cloudberrydb" # for 1.5.x
-  pkg_name: "cloudberry-db" # for 1.6.x
+  pkg_name: "cloudberry-db" # for 1.6.x ,  pkg_name: "cloudberrydb" # for 1.5.x
   cluster_name: jack-kr-cbdb
   base_dir: "/usr/local"
   admin_user: "gpadmin"
@@ -25,7 +24,7 @@ cbdb:
   initdb_single: False
   initdb_with_standby: True
   seg_serialized_install: False
-  domain: "jtest.pivotal.io"
+  domain: "jtest.futurfusion.io"
   repo_url: ""
   download_url: ""
   download: false
@@ -37,21 +36,23 @@ cbdb:
   metric_build_version:
   net:
     type: "virtual"                # Or Physical
-    gateway: "192.168.0.1"
-    ipaddr0: "192.168.0.7"
-    ipaddr1: "192.168.1.7"
-    ipaddr2: "192.168.2.7"
+    gateway: "192.168.2.1"
+    ipaddr0: "192.168.0.19"
+    ipaddr2: "192.168.2.19"
   client:
     net:
       type: "virtual"              # Or Physical
       cores: 1
-      ipaddr0: "192.168.0.6"
-      ipaddr1: "192.168.1.6"
-      ipaddr2: "192.168.2.6"
+      ipaddr0: "192.168.0.19"
+      ipaddr2: "192.168.2.19"
   ext_storage:
     net:
       ipaddr0: "192.168.0."
-      ipaddr1: "192.168.1."
+  vms:
+    rk9: [ "rk9-freeipa", "rk9-node01", "rk9-node02", "rk9-node03", "rk9-node04", "rk9-node05" ]
+    ubt24: [ "rk9-freeipa", "ubt24-node01", "ubt24-node02", "ubt24-node03", "ubt24-node04", "ubt24-node05" ]
+  debug_opt: ""  # --debug
+
 
 
 jdk:
@@ -77,6 +78,13 @@ vmware:
   esxi_hostname: "192.168.0.231"
   esxi_username: "root"
   esxi_password: "Changeme34#$"
+
+
+kvm:
+  hostname: "192.168.0.101"
+  username: "root"
+  password: "changeme"
+
 
 
 #ssl:

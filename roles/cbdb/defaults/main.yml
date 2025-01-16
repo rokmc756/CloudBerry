@@ -2,17 +2,17 @@ package_download_path : "/tmp"
 freeipa:
   admin_user: admin
   admin_passwd: changeme
-  client_domain: jtest.pivotal.io
-  client_server: lab.jtest.pivotal.io
-  client_ipaddr: 192.168.0.101
-  client_realm: JTEST.PIVOTAL.IO
+  client_domain: {{ cbdb.domain }}
+  client_server: lab.{{ cbdb.domain }}
+  client_ipaddr: 192.168.2.101
+  client_realm: JTEST.FUTURFUSION.IO
   client_fqdn: "{{ hostvars[groups['master'][0]].ansible_hostname }}"
   client_extra_args: [ '--kinit-attempts=3', '--mkhomedir']
   ldap:
     database: ldap_testdb
-    server: "192.168.0.101"
+    server: "192.168.2.101"
     cn: "cn=users,cn=accounts"
-    dn: "dc=jtest,dc=pivotal,dc=io"
+    dn: "dc=jtest,dc=futurfusion,dc=io"
     users:
       - { username: jmoon, passwd: changeme, first_name: Jack, last_name: Moon }
       - { username: rmoon, passwd: changeme, first_name: Rose, last_name: Moon }
@@ -24,7 +24,7 @@ freeipa:
     client_cbdb_keytab: /home/gpadmin/cbdb-kerberos.keytab
     client_keytab_fullpath: /etc/krb5.keytab
     users:
-      - { username: gpuser,  passwd: changeme, first_name: GPadmin , last_name: Moon }
+      - { username: gpuser,  passwd: changeme, first_name: GPAdmin , last_name: Moon }
 
 ssl:
   dir: "{{ cbdb.coordinator_data_dir }}"
@@ -32,8 +32,8 @@ ssl:
   country: "KR"
   state: "Seoul"
   location: "Guro"
-  organization: "Pivotal"
+  organization: "FuturFusion"
   organization_unit: "Global Support Service"
-  common_name: "jtest.pivotal.io"
-  email: "jomoon@pivotal.io"
+  common_name: "{{ cbdb.domain }}"
+  email: "jomoon@futurfusion.io"
 
