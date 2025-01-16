@@ -1,6 +1,5 @@
 ## CloudBerry Database Arichtecture
 ![alt text](https://github.com/rokmc756/CloudBerry/blob/main/roles/cbdb/images/cbdb-architecture.png)
-~~~
 In most cases, Cloudberry Database is similar to PostgreSQL in terms of SQL support, features, configuration options, and user functionalities.\
 Users can interact with Cloudberry Database in a similar way to how they interact with a standalone PostgreSQL system.
 Cloudberry Database uses MPP (Massively Parallel Processing) architecture to store and process large volumes of data, by distributing data and computing workloads across multiple servers or hosts.
@@ -13,7 +12,6 @@ From users' view, Cloudberry Database is a complete relational database manageme
 
 In a physical view, it contains multiple PostgreSQL instances. To make these independent PostgreSQL instances work together, Cloudberry Database performs distributed cluster processing at different levels for data storage, computing, communication, and management.\
 Cloudberry Database hides the complex details of the distributed system, giving users a single logical database view. This greatly eases the work of developers and operational staff.
-~~~
 
 ## What is CloudBerry?
 Cloudberry Database, built on the latest PostgreSQL 14.4 kernel, is one of the most advanced and mature open-source MPP databases available.
