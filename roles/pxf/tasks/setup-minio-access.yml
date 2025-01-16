@@ -119,7 +119,7 @@
 
 - name: Create Normal and External Tables for Minio S3
   become_user: gpadmin
-  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ pxf.database_name }} -f {{ minio.base_work_dir }}/{{ item }} )
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ _pxf.database_name }} -f {{ minio.base_work_dir }}/{{ item }} )
   args:
     executable: /bin/bash
   register: minio_external_table_created
@@ -152,7 +152,7 @@
 
 - name: Select data from Minio Server
   become_user: gpadmin
-  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -P pager=off -d {{ pxf.database_name }} -c 'select * from read_pxf_parquet_s3 limit 10' )
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -P pager=off -d {{ _pxf.database_name }} -c 'select * from read_pxf_parquet_s3 limit 10' )
   args:
     executable: /bin/bash
   register: minio_data_selected

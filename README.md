@@ -170,9 +170,6 @@ kvm:
 
 #### 6) Configure Ansible Roles and Deploy CBDB and Extentions by Playbook
 ```yaml
-
-$ make cbdb r=install s=common
-
 $ make cbdb r=prepare
 
 $ make cbdb r=install s=db
@@ -185,9 +182,10 @@ $ make cbdb r=install s=tls
 ```
 
 
-#### 7) Configure PXF Roles and Deploy PXF Extentions by Ansible Playbook
+#### 7) Configure PXF Roles and Deploy or Destroy PXF Extentions by Ansible Playbook
 ```yaml
 $ make pxf r=install
+$ make pxf r=uninstall
 ```
 
 

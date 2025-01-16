@@ -1,4 +1,6 @@
+###############################################################################################################################################################################
 # Database installation
+###############################################################################################################################################################################
 #
 - name: Copy CloudBerry Database {{ cbdb.major_version }} {{ cbdb.binary_type }} File
   copy: src={{ binary_installer_file }}.{{ cbdb.binary_type }} dest=/home/gpadmin/{{ binary_installer_file }}.{{ cbdb.binary_type }} mode=0644 owner=gpadmin group=gpadmin

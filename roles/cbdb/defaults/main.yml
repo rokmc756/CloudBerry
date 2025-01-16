@@ -2,8 +2,8 @@ package_download_path : "/tmp"
 freeipa:
   admin_user: admin
   admin_passwd: changeme
-  client_domain: {{ cbdb.domain }}
-  client_server: lab.{{ cbdb.domain }}
+  client_domain: "{{ cbdb.domain }}"
+  client_server: "lab.{{ cbdb.domain }}"
   client_ipaddr: 192.168.2.101
   client_realm: JTEST.FUTURFUSION.IO
   client_fqdn: "{{ hostvars[groups['master'][0]].ansible_hostname }}"

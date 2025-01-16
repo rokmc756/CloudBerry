@@ -157,7 +157,7 @@
 
 - name: Run query examples for nfs access
   become_user: gpadmin
-  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -tAc -d {{ pxf.database_name }} -f /home/gpadmin/query-examples/{{ item }} )
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -tAc -d {{ _pxf.database_name }} -f /home/gpadmin/query-examples/{{ item }} )
   args:
     executable: /bin/bash
   register: run_query_examples_output

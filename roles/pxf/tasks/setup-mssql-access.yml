@@ -114,7 +114,7 @@
 
 - name: Create External Table for MS-SQL
   become_user: gpadmin
-  shell: ( source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ pxf.database_name }} -f {{ mssql.base_work_dir }}/create-external-table.sql )
+  shell: ( source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ _pxf.database_name }} -f {{ mssql.base_work_dir }}/create-external-table.sql )
   args:
     executable: /bin/bash
   register: mssql_external_table_created
@@ -125,7 +125,7 @@
 
 - name: Select data from MS-SQL Server
   become_user: gpadmin
-  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ pxf.database_name }} -c 'select * from countries' )
+  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ _pxf.database_name }} -c 'select * from countries' )
   args:
     executable: /bin/bash
   register: mssql_data_selected

@@ -53,11 +53,3 @@
 - debug: msg={{ check_cbdb_standby_master }}
   when: print_debug == true and inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True )
 
-
-#- name: Start CloudBerry Database
-#  become_user: gpadmin
-#  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstart -a )
-#  async: 60
-#  poll: 5
-#  when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True and cbdb_running_nothing.stat.exists != True )
-

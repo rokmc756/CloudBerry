@@ -14,10 +14,7 @@
 
 - name: Check if CloudBerry Database is Installed Already
   import_tasks: check-cbdb-installed.yml
-  tags:
-    - install
-    - uninstall
-    - prepare
+  tags: prepare, install, uninstall, deploy, init, enable
 
 
 - name: Prepare OS Parameters
@@ -27,73 +24,73 @@
 
 - name: Install CloudBerry Database Software Binary
   import_tasks: install-cbdb.yml
-  tags: install
+  tags: install, deploy, init
   when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Initialize CloudBerry Database
   import_tasks: init-cbdb.yml
-  tags: install
+  tags: install, init, deploy
   when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Add CloudBerry Standby Master Database
   import_tasks: init-stadnby-cbdb.yml
-  tags: install
+  tags: install, init, deploy
   when: ( standby is defined and standby == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Enable SSL
   import_tasks: enable-ssl.yml
-  tags: install
+  tags: install, enable
   when: ( tls is defined and tls == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Enable LDAP Authentication
   import_tasks: enable-ldap.yml
-  tags: install
+  tags: install, enable
   when: ( ldap is defined and ldap == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Enable Resource Group
   import_tasks: enable-resource-group.yml
-  tags: install
+  tags: install, enable
   when: ( rg is defined and rg == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Enable Kerberos Authentication
   import_tasks: enable-kerberos.yml
-  tags: install
+  tags: install, enable
   when: ( krb5 is defined and krb5 == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Finalize CloudBerry Database
   import_tasks: finalize-cbdb.yml
-  tags: install
+  tags: install, deploye
   when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Uninstall LDAP Authentication
   import_tasks: uninstall-ldap.yml
-  tags: uninstall
+  tags: uninstall, destroy
   when: ( ldap is defined and ldap == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Uninstall Kerberos Authentication
   import_tasks: uninstall-kerberos.yml
-  tags: uninstall
+  tags: uninstall, destroy
   when: ( krb5 is defined and krb5 == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Disable Resource Group
   import_tasks: disable-resource-group.yml
-  tags: uninstall
+  tags: uninstall, disable
   when: ( rg is defined and rg == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
 - name: Uninstall CloudBerry Database
   import_tasks: uninstall.yml
-  tags: uninstall
+  tags: uninstall, destroy
   when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 

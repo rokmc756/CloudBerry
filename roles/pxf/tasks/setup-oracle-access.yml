@@ -131,7 +131,7 @@
 
 - name: Create External Table for Oracle
   become_user: gpadmin
-  shell: ( source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ pxf.database_name }} -f {{ oracle.base_work_dir }}/create-external-table.sql )
+  shell: ( source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ _pxf.database_name }} -f {{ oracle.base_work_dir }}/create-external-table.sql )
   args:
     executable: /bin/bash
   register: oracle_external_table_created
@@ -145,7 +145,7 @@
 
 - name: Create Writable External Table for Oracle
   become_user: gpadmin
-  shell: ( source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ pxf.database_name }} -f {{ oracle.base_work_dir }}/create-writable-external-table.sql )
+  shell: ( source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ _pxf.database_name }} -f {{ oracle.base_work_dir }}/create-writable-external-table.sql )
   args:
     executable: /bin/bash
   register: oracle_writable_external_table_created
@@ -158,7 +158,7 @@
 
 - name: Select data from Oracle Database
   become_user: gpadmin
-  shell: ( source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ pxf.database_name }} -c 'select * from countries' )
+  shell: ( source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -d {{ _pxf.database_name }} -c 'select * from countries' )
   args:
     executable: /bin/bash
   register: oracle_data_selected

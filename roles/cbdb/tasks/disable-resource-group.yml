@@ -1,6 +1,5 @@
 ###########################################################
 # Resource Group configuration
-#
 # Downloaded From Here - https://pkgs.sysadmins.ws/el9/base/x86_64/
 
 - name: Disabling Resource Groups by Gpconfig

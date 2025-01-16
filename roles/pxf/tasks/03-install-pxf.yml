@@ -1,5 +1,5 @@
 ---
-- name: Copy the PXF .{{ pxf.binary_type }} File to All Hosts in CloudBerry Cluster
+- name: Copy the PXF .{{ _pxf.binary_type }} File to All Hosts in CloudBerry Cluster
   copy: src={{ pxf_package_name }} dest={{ cbdb.admin_home_dir }}/{{ pxf_package_name }} mode=0644 owner=gpadmin group=gpadmin
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
 
