@@ -16,7 +16,7 @@ It comes with multiple features, including high concurrency and high availabilit
 meeting the demands of managing and computing vast amounts of data.
 
 ## Where is CloudBerry from and How is it changed?
-GPFarmer has been developing based on cbdb-ansible project - https://github.com/andreasscherbaum/cbdb-ansible. Andreas! Thanks for sharing it.
+GPFarmer has been developing based on cbdb-ansible project - https://github.com/andreasscherbaum/gpdb-ansible. Andreas! Thanks for sharing it.
 Since it only provide install cbdb on a single host GPFarmer support multiple hosts and many extensions to deploy them and support two binary type, rpm and bin.
 
 ## Supported cbdb and extension version
