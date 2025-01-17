@@ -24,28 +24,9 @@
   when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments'] ) and ( cbdb.mirror_enable == True and cbdb_install == True )
 
 
-- name: Copy gpinitsystem Config File for Single Node
-  command: creates={{ cbdb.admin_home_dir }}/gpinitsystem_config cp -a {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/docs/cli_help/gpconfigs/gpinitsystem_singlenode {{ cbdb.admin_home_dir }}/gpinitsystem_config
-  when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb.initdb_single == True )
-
-
 - name: Copy gpinitsystem Config File for Multiple Nodes
   command: creates={{ cbdb.admin_home_dir }}/gpinitsystem_config cp -a {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/docs/cli_help/gpconfigs/gpinitsystem_config {{ cbdb.admin_home_dir }}/gpinitsystem_config
-  when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb.initdb_with_standby == True )
-
-
-- name: Create hostfile File for Master Node
-  lineinfile:
-    path: "{{ cbdb.admin_home_dir }}/hostfile"
-    line: "{{ hostvars[item]['ansible_hostname'] }}"
-    state: present
-    owner: gpadmin
-    group: gpadmin
-    mode: '0644'
-    create: yes
-  register: hostfile_created
-  with_items: "{{ groups['master'] }}"
-  when: ( inventory_hostname in groups['master'] and cbdb_install == True ) and ( cbdb.initdb_single == True and cbdb.initdb_with_standby == False )
+  when: inventory_hostname in groups['master'] and cbdb_install == True
 
 
 - name: Create hostfile_all File for All Nodes
@@ -62,7 +43,7 @@
     - "{{ groups['master'] }}"
     - "{{ groups['standby'] }}"
     - "{{ groups['segments'] }}"
-  when: ( inventory_hostname in groups['master'] and cbdb_install == True ) and ( cbdb.initdb_single == False and cbdb.initdb_with_standby == True )
+  when: ( inventory_hostname in groups['master'] and cbdb_install == True )
 
 
 - name: Create hostfile File for Segment Nodes
@@ -73,7 +54,7 @@
     create: yes
   register: hostfile_created
   with_items: "{{ groups['segments'] }}"
-  when: ( inventory_hostname in groups['master'] and cbdb_install == True ) and ( cbdb.initdb_single == False and cbdb.initdb_with_standby == True )
+  when: ( inventory_hostname in groups['master'] and cbdb_install == True ) and ( db is defined and db == true )
 
 
 - name: Fix Permissions and Ownership for gpinitsystem Config File and hostlist File
@@ -186,26 +167,17 @@
 
 - name: Initialize CloudBerry Database Cluster
   become_user: gpadmin
-  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpinitsystem -a -c {{ cbdb.admin_home_dir }}/gpinitsystem_config -h {{ cbdb.admin_home_dir }}/hostfile {{ cbdb.spread_mirrors }} )
+  shell: |
+    source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpinitsystem -c {{ cbdb.admin_home_dir }}/gpinitsystem_config -a {{ cbdb.spread_mirrors }} -h {{ cbdb.admin_home_dir }}/hostfile
+  register: init_db
   args:
     executable: /bin/bash
   async: 600
   poll: 5
-  register: init_db
-  when: inventory_hostname in groups['master'] and cbdb.initdb_with_standby == False
+  when: inventory_hostname in groups['master']
   failed_when: init_db.rc > 1
-
-
-- name: Initialize CloudBerry Database Cluster with Standby Master
-  become_user: gpadmin
-  shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpinitsystem -c {{ cbdb.admin_home_dir }}/gpinitsystem_config -a {{ cbdb.spread_mirrors }} -h {{ cbdb.admin_home_dir }}/hostfile -s {{ hostvars[groups['standby'][0]]['ansible_hostname'] }} )
-  args:
-    executable: /bin/bash
-  async: 600
-  poll: 5
-  register: init_db
-  when: inventory_hostname in groups['master'] and cbdb.initdb_with_standby == True
-  failed_when: init_db.rc > 1
+- debug: msg={{ init_db }}
+  when: inventory_hostname in groups['master']
 
 
 - name: Add COORDINATOR_DATA_DIRECTORY to greenplum_path.sh

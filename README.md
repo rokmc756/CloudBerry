@@ -19,7 +19,7 @@ meeting the demands of managing and computing vast amounts of data.
 GPFarmer has been developing based on cbdb-ansible project - https://github.com/andreasscherbaum/gpdb-ansible. Andreas! Thanks for sharing it.
 Since it only provide install cbdb on a single host GPFarmer support multiple hosts and many extensions to deploy them and support two binary type, rpm and bin.
 
-## Supported cbdb and extension version
+## Supported CBDB and Extension Version
 * CBDB 1.6.x
 
 ## Supported Platform and OS
@@ -48,14 +48,14 @@ $ sudo yum install ansible
 ## Prepareing OS
 Configure Yum / Local & EPEL Repostiory
 
-## Download / configure / run CloudBerry
-#### 1) Clone GPFarmer ansible playbook and go to that directory
+## Download / Configure / Run CloudBerry
+#### 1) Clone CloudBerry Ansible Playbook and Go to the Directory
 ```
 $ git clone https://github.com/rokmc756/CloudBerry
 $ cd CloudBerry
 ```
 
-#### 2) Configure password for sudo user in VMs where cbdb would be deployed
+#### 2) Configure Password for Uudo User in VMs Where CBDB would be Deployed
 ```
 $ vi Makefile
 ANSIBLE_HOST_PASS="changeme"  # It should be changed with password of user in ansible host that gpfarmer would be run.
@@ -177,13 +177,13 @@ kvm:
   password: "changeme"
 ```
 
-#### 6) Configure Ansible Roles and Deploy CBDB and Extentions by Playbook
+#### 6) Deploy CBDB and Extentions by Playbook
 ```yaml
 $ make cbdb r=prepare
 
 $ make cbdb r=install s=db
 
-$ make cbdb r=install s=standby
+$ make cbdb r=add s=standby
 
 $ make cbdb r=install s=rg
 
@@ -191,15 +191,25 @@ $ make cbdb r=install s=tls
 ```
 
 
-#### 7) Configure PXF Roles and Deploy or Destroy PXF Extentions by Ansible Playbook
+#### 7) Deploy or Destroy PXF Extentions
 ```yaml
 $ make pxf r=install
 $ make pxf r=uninstall
 ```
 
 
+#### 8) Destroy CBDB and Extentions
+```yaml
+$ make cbdb r=uninstall s=db
+```
+
+
+
 ## Planning
-Change CentOS and Rocky Linux repository into local mirror in Korea\
-Converting Makefile.init from original project\
-Adding SELinux role\
-Adding tuned role
+[ ] Fixing Initialize Coodinator with Standby\
+[ ] Change CentOS and Rocky Linux repository into local mirror in Korea\
+[ ] Converting Makefile.init from original project\
+[ ] Adding SELinux role\
+[ ] Adding tuned role
+
+

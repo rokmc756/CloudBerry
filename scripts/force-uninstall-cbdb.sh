@@ -8,9 +8,9 @@
 
 
 
-HOSTS_RANGE="71 75"      # rh7
+HOSTS_RANGE="191 195"      # rh7
 
-NETWORK_RANGE="192.168.0"
+NETWORK_RANGE="192.168.2"
 USER="root"
 
 for i in `seq $HOSTS_RANGE`
@@ -41,4 +41,5 @@ done
 #       rm -rf /home/gpadmin/*;
 #       rm -rf /home/gpadmin;
 #       userdel gpadmin
+#        /home/gpadmin/.ssh/known_hosts /root/.ssh/known_hosts \
 

@@ -100,18 +100,27 @@
   when: ( cbdb_install == True and cbdb.binary_type == 'deb' )
 
 
+- name: Create Symlink for CloudBerry Install Directory
+  file:
+    src: "{{ cbdb.base_dir }}/{{ install_path }}"
+    dest: "{{ cbdb.base_dir }}/{{ link_path }}"
+    owner: gpadmin
+    group: gpadmin
+    state: link
+
+
 - name: Remove Temp Installer Directory
   file: path=/home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install state=absent
   changed_when: False
   when: ( cbdb_install == True and cbdb.binary_type == 'zip' )
 
 
-#- name: Check Again if the CloudBerry Database Version is Already Installed
-#  stat: path={{ cbdb.base_dir }}/{{ install_path }}
-#  register: cbdb_installed_verify
-#
-#
-#- name: Stop if CloudBerry Database Software is not Installed
-#  fail: msg="Installing CloudBerry Database Software is currently failed!"
-#  when: cbdb_installed_verify.stat.exists != True
+- name: Check Again if the CloudBerry Database Version is Already Installed
+  stat: path={{ cbdb.base_dir }}/{{ install_path }}
+  register: verify_cbdb_installed
+
+
+- name: Stop if CloudBerry Database Software is not Installed
+  fail: msg="Installing CloudBerry Database Software is currently failed!"
+  when: verify_cbdb_installed.stat.exists != True
 

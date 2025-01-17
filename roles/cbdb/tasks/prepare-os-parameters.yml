@@ -1,14 +1,14 @@
 ###########################################################
 # Basic OS Setup
 #
-- name: Add gpadmin Group
+- name: Add GPAdmin Group
   group:
     name: gpadmin
     state: present
 
 
 # Do not create ssh keys since this conflicts somehow with gpssh-exkeys
-- name: Add gpadmin User
+- name: Add GPAdmin User
   user:
     name: gpadmin
     password: "{{ 'changeme' | password_hash('sha512') }}"
@@ -54,7 +54,7 @@
   selinux: state=disabled
   notify:
     - Restart system
-    - Waiting for server to come back after reboot
+    - Waiting for Server to Come Back after Reboot
 
 
 - name: Modify /etc/systemd/logingd.conf to Not Remove
@@ -66,7 +66,7 @@
   with_items:
     - { regexp: '^#RemoveIPC=', line: 'RemoveIPC=no', state: present }
   notify:
-    - Reload systemd-logind
+    - Reload Systemd-Logind
 
 
 - name: Modify /etc/sysctl.d/98-sysctl-cbdb.conf
@@ -78,7 +78,7 @@
     create: yes
   with_items: "{{ common_cbdb_kernel_parameters }}"
   notify:
-    - Reload sysctl
+    - Reload Sysctl
 
 
 - name: Modify /etc/sysctl.d/98-sysctl-cbdb.conf
@@ -90,7 +90,7 @@
     create: yes
   with_items: "{{ rhel7_cbdb_kernel_parameters }}"
   notify:
-    - Reload sysctl
+    - Reload Sysctl
   when: ( ansible_distribution == 'RedHat' or ansible_distribution == 'CentOS' or ansible_distribution == 'Rocky' ) and hostvars[inventory_hostname].ansible_distribution_major_version|int <= 7
 
 
@@ -103,15 +103,15 @@
   with_items:
     - { regexp: '^PermitRootLogin', line: 'PermitRootLogin yes', state: present }
   notify:
-    - Reload sshd
+    - Reload SSHd
 
 
-# Move the security limits in it's own file, Instead of adding them to the main config file
 - name: Security limits
   copy: src=security_limits.conf dest=/etc/security/limits.d/95-cbdb.conf
   notify:
-    - Restart system
-    - Waiting for server to come back after reboot
+    - Restart System
+    - Waiting for Server to Come Back after Reboot
+
 
 # Need to add XFS options
 # Need to check I/O scheduler

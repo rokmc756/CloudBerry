@@ -1,4 +1,45 @@
 ---
+- name: Check if Any Version of CloudBerry Database is Already Linked
+  stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  register: check_cbdb_link
+
+
+- name: Check if the CloudBerry Database Version is Already Installed
+  stat: path={{ cbdb.base_dir }}/{{ install_path }}
+  register: check_cbdb_dir
+  # stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}.{{ cbdb.patch_version }}
+
+
+- name: Sanity Check for {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
+  fail: msg="CloudBerry Database Software is not existed"
+  when: check_cbdb_dir.stat.exists != True and check_cbdb_link.stat.islnk != True
+
+
+- name: Set Name for Binary Installer File ( Name Includes Build Number )
+  set_fact:
+    cbdb_dir: "{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}.{{ cbdb.patch_version }}"
+    cbdb_package_name: "{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}.{{ cbdb.patch_version }}-{{ cbdb.build_version }}"
+    binary_installer_file: "{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}-{{ cbdb.patch_version }}.{{ cbdb.os_name }}-{{ cbdb.arch_name }}"
+
+
+- name: Identify CloudBerry Database Uninstallation
+  set_fact:
+    init_cbdb_standby: true
+  when: check_cbdb_dir.stat.exists == True and check_cbdb_link.stat.islnk == True
+
+
+- name: CloudBerry Database Uninstallation
+  debug: msg="Uninstall CloudBerry Database"
+  when: init_cbdb_standby == true
+
+
+# Database Uninstallation
+- name: Check if CloudBerry Database is Running
+  stat: path=/tmp/.s.PGSQL.5432
+  register: cbdb_running
+  when: inventory_hostname in groups['master'] and init_cbdb_standby == True
+
+
 - name: Add CloudBerry Standby Master Database
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpinitstandby -D -a -s {{ hostvars[groups['standby'][0]]['ansible_hostname'] }} )
@@ -7,7 +48,7 @@
   async: 600
   poll: 5
   register: init_db
-  when: inventory_hostname in groups['master'] and cbdb.initdb_with_standby == True
+  when: inventory_hostname in groups['master'] and init_cbdb_standby == True
   failed_when: init_db.rc > 1
 
 
@@ -20,7 +61,7 @@
     state: "{{ item.state }}"
   with_items:
     - { regexp: '^export COORDINATOR_DATA_DIRECTORY=', line: 'export COORDINATOR_DATA_DIRECTORY={{ cbdb.coordinator_data_dir }}', state: present }
-  when: ( inventory_hostname in groups['standby'] ) and ( cbdb_install == True or cbdb_linkchange == True )
+  when: inventory_hostname in groups['standby'] and init_cbdb_standby == True
 
 
 - name: Restart CloudBerry Database after Initialization
@@ -28,13 +69,13 @@
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
   async: 60
   poll: 5
-  when: inventory_hostname in groups['master'] and ( cbdb_install == True or cbdb_linkchange == True )
+  when: inventory_hostname in groups['master'] and init_cbdb_standby == True
 
 
 - name: Check if CloudBerry Database is Running
   stat: path=/tmp/.s.PGSQL.5432
   register: cbdb_running_nothing
-  when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True )
+  when: inventory_hostname in groups['master'] and init_cbdb_standby == True
 
 
 - name: Validate if CBDB Standby Master is Running Normally
@@ -49,7 +90,7 @@
     chdir: "{{ cbdb.admin_home_dir }}"
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True )
+  when: inventory_hostname in groups['master'] and ( init_cbdb_standby == True )
 - debug: msg={{ check_cbdb_standby_master }}
-  when: print_debug == true and inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True )
+  when: print_debug == true and inventory_hostname in groups['master'] and init_cbdb_standby == True
 
