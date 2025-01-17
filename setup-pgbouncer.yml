@@ -1,6 +1,0 @@
----
-- hosts: rk9-node01
-  become: true
-  gather_facts: true
-  roles:
-    - { role: pgbouncer }

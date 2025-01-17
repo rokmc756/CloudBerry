@@ -39,7 +39,6 @@
   when: check_cbdb_dir.stat.exists == True and check_cbdb_link.stat.islnk == True
 
 
-# If the link points to a different existing directory, it's a link change
 - name: Identify CloudBerry Database Linkchange
   set_fact:
     cbdb_unlinkchange: true
@@ -97,7 +96,6 @@
   when: ( cbdb_uninstall == True and cbdb_unlinkchange == True )
 
 
-
 - name: Delete {{ cbdb.coordinator_data_dir }} for Master Data Directories
   file:
     path: "{{ cbdb.coordinator_data_dir }}"
@@ -149,7 +147,6 @@
     - "{{ cbdb.base_dir }}/{{ cbdb.pkg_name }}"
     - "{{ cbdb.base_dir }}/{{ cbdb_dir }}"
   when: ( cbdb_uninstall == True and cbdb_unlinkchange == True )
-
 
 
 - name: CloudBerry Database Uninstallation
