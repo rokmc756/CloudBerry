@@ -1,10 +1,10 @@
 ---
-- name: Check if Any Version of CloudBerry Database is Already Installed
+- name: Check if Any Version of CloudBerry MPP Database is Already Installed
   stat: path={{ cbdb.base_dir }}/{{ link_path }}
   register: check_cbdb_link
 
 
-- name: Check if the CloudBerry Database Version is Already Installed
+- name: Check if the CloudBerry MPP Database Version is Already Installed
   stat: path={{ cbdb.base_dir }}/{{ install_path }}
   register: check_cbdb_dir
 
@@ -20,30 +20,30 @@
     cbdb_linkchange: False
 
 
-- name: Identify CloudBerry Database Installation
+- name: Identify CloudBerry MPP Database Installation
   set_fact:
     cbdb_install: True
   when: check_cbdb_dir.stat.exists != True and check_cbdb_link.stat.exists != True
 
 
 # If the link points to a different existing directory, it's a link change
-- name: Identify CloudBerry Database Linkchange
+- name: Identify CloudBerry MPP Database Linkchange
   set_fact:
     cbdb_linkchange: True
   when: check_cbdb_link.stat.exists != True
 
 
-- name: CloudBerry Database Installation
-  debug: msg="New CloudBerry Database installation"
+- name: CloudBerry MPP Database Installation
+  debug: msg="New CloudBerry MPP Database installation"
   when: cbdb_install == True
 
 
-- name: CloudBerry Database Link Change
-  debug: msg="Changing link to CloudBerry Database version"
+- name: CloudBerry MPP Database Link Change
+  debug: msg="Changing link to CloudBerry MPP Database version"
   when: cbdb_linkchange == True
 
 
-- name: CloudBerry Database - Nothing to do
+- name: CloudBerry MPP Database - Nothing to do
   debug: msg="Nothing to do (no installation/upgrade required)"
   when: cbdb_install == False and cbdb_linkchange == False
 

@@ -1,17 +1,17 @@
 ---
-- name: Check if Any Version of CloudBerry Database is Already Linked
+- name: Check if Any Version of CloudBerry MPP Database is Already Linked
   stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
   register: check_cbdb_link
 
 
-- name: Check if the CloudBerry Database Version is Already Installed
+- name: Check if the CloudBerry MPP Database Version is Already Installed
   stat: path={{ cbdb.base_dir }}/{{ install_path }}
   register: check_cbdb_dir
   # stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}.{{ cbdb.patch_version }}
 
 
 - name: Sanity Check for {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
-  fail: msg="CloudBerry Database Software is not existed"
+  fail: msg="CloudBerry MPP Database Software is not existed"
   when: check_cbdb_dir.stat.exists != True and check_cbdb_link.stat.islnk != True
 
 
@@ -22,25 +22,25 @@
     binary_installer_file: "{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}-{{ cbdb.patch_version }}.{{ cbdb.os_name }}-{{ cbdb.arch_name }}"
 
 
-- name: Identify CloudBerry Database Uninstallation
+- name: Identify CloudBerry MPP Database Uninstallation
   set_fact:
     init_cbdb_standby: true
   when: check_cbdb_dir.stat.exists == True and check_cbdb_link.stat.islnk == True
 
 
-- name: CloudBerry Database Uninstallation
-  debug: msg="Uninstall CloudBerry Database"
+- name: CloudBerry MPP Database Uninstallation
+  debug: msg="Uninstall CloudBerry MPP Database"
   when: init_cbdb_standby == true
 
 
 # Database Uninstallation
-- name: Check if CloudBerry Database is Running
+- name: Check if CloudBerry MPP Database is Running
   stat: path=/tmp/.s.PGSQL.5432
   register: cbdb_running
   when: inventory_hostname in groups['master'] and init_cbdb_standby == True
 
 
-- name: Add CloudBerry Standby Master Database
+- name: Add CloudBerry MPP Standby Master Database
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpinitstandby -D -a -s {{ hostvars[groups['standby'][0]]['ansible_hostname'] }} )
   args:
@@ -64,7 +64,7 @@
   when: inventory_hostname in groups['standby'] and init_cbdb_standby == True
 
 
-- name: Restart CloudBerry Database after Initialization
+- name: Restart CloudBerry MPP Database after Initialization
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
   async: 60
@@ -72,13 +72,13 @@
   when: inventory_hostname in groups['master'] and init_cbdb_standby == True
 
 
-- name: Check if CloudBerry Database is Running
+- name: Check if CloudBerry MPP Database is Running
   stat: path=/tmp/.s.PGSQL.5432
   register: cbdb_running_nothing
   when: inventory_hostname in groups['master'] and init_cbdb_standby == True
 
 
-- name: Validate if CBDB Standby Master is Running Normally
+- name: Validate if CloudBerry MPP Database Standby Master is Running Normally
   become_user: gpadmin
   shell: |
     source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstate -f | grep "WAL Sender State:" | cut -d ' ' -f 5

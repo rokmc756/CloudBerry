@@ -1,5 +1,5 @@
 ---
-- name: Verify that CloudBerry Database is Up and Running
+- name: Verify that CloudBerry MPP Database is Up and Running
   become_user: gpadmin
   changed_when: False
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "SELECT VERSION()" )
@@ -7,7 +7,7 @@
     executable: /bin/bash
   register: select_version
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: Drop Database for LDAP Users
@@ -18,7 +18,7 @@
     executable: /bin/bash
   register: ldap_database_dropped
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: Delete a Service for
@@ -43,7 +43,7 @@
   ignore_errors: true
   with_items: "{{ freeipa.ldap.users }}"
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: Delte User in FreeIPA Server
@@ -67,7 +67,7 @@
 
 
 # State is set to Absent to remove if the Searching Line is found
-- name: Remove LDAP Configuration File to Authenticate LDAP User into CloudBerry Database
+- name: Remove LDAP Configuration File to Authenticate LDAP User into CloudBerry MPP Database
   become_user: gpadmin
   lineinfile:
     path: "{{ cbdb.coordinator_data_dir }}/{{ item.file }}"
@@ -99,7 +99,7 @@
   register: hostname_ipaddr_entries_removed
 
 
-- name: Restart CloudBerry Database to Apply Changes
+- name: Restart CloudBerry MPP Database to Apply Changes
   become_user: gpadmin
   changed_when: False
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
@@ -107,5 +107,5 @@
     executable: /bin/bash
   register: cbdb_restarted
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 

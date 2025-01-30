@@ -2,7 +2,7 @@
 # Database installation
 ###############################################################################################################################################################################
 #
-- name: Copy CloudBerry Database {{ cbdb.major_version }} {{ cbdb.binary_type }} File
+- name: Copy CloudBerry MPP Database {{ cbdb.major_version }} {{ cbdb.binary_type }} File
   copy: src={{ binary_installer_file }}.{{ cbdb.binary_type }} dest=/home/gpadmin/{{ binary_installer_file }}.{{ cbdb.binary_type }} mode=0644 owner=gpadmin group=gpadmin
 
 
@@ -19,24 +19,24 @@
 
 
 - block:
-  - name: Unzip CloudBerry Database {{ cbdb.major_version }} archive (Ansible < 2.2)
+  - name: Unzip CloudBerry MPP Database {{ cbdb.major_version }} archive (Ansible < 2.2)
     unarchive: src=/home/gpadmin/{{ binary_installer_file }}.zip dest=/home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install remote_src=yes copy=no owner=gpadmin group=gpadmin
     when: ansible_version.full is version_compare('2.2.0.0', operator='<', strict=False)
 
-  - name: Unzip CloudBerry Database {{ cbdb.major_version }} archive (Ansible >= 2.2)
+  - name: Unzip CloudBerry MPP Database {{ cbdb.major_version }} archive (Ansible >= 2.2)
     unarchive: src=/home/gpadmin/{{ binary_installer_file }}.zip dest=/home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install remote_src=yes owner=gpadmin group=gpadmin
     when: ansible_version.full is version_compare('2.2.0.0', operator='>=', strict=False)
 
   when: cbdb_install == True and (  cbdb.binary_type != 'rpm' and cbdb.binary_type != 'deb' )
 
 
-- name: Check if CloudBerry Database is Running
+- name: Check if CloudBerry MPP Database is Running
   stat: path=/tmp/.s.PGSQL.5432
   register: cbdb_running
   when: inventory_hostname in groups['master']
 
 
-- name: Shutdown CloudBerry Database
+- name: Shutdown CloudBerry MPP Database
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -a )
   args:
@@ -66,7 +66,7 @@
   when: ( inventory_hostname in groups['master'] and cbdb_install == True ) and ( cbdb.binary_type != 'rpm' and cbdb.binary_type != 'deb' )
 
 
-- name: Install CloudBerry Database Software Binary in {{ cbdb.base_dir }}
+- name: Install CloudBerry MPP Database Software Binary in {{ cbdb.base_dir }}
   become_user: gpadmin
   command: /home/gpadmin/cbdb{{ cbdb.major_version }}-tmp-install/{{ binary_installer_file }}.bin
   async: 120
@@ -81,7 +81,7 @@
     executable: /bin/bash
 
 
-- name: Install CloudBerry Database Software RPM Package in {{ cbdb.base_dir }}
+- name: Install CloudBerry MPP Database Software RPM Package in {{ cbdb.base_dir }}
   package:
     name: /home/gpadmin/{{ binary_installer_file }}.{{ cbdb.binary_type }}
     state: present
@@ -91,7 +91,7 @@
   when: ( cbdb_install == True and cbdb.binary_type == 'rpm' )
 
 
-- name: Install CloudBerry Database Software DEB Package in {{ cbdb.base_dir }}
+- name: Install CloudBerry MPP Database Software DEB Package in {{ cbdb.base_dir }}
   apt:
     deb: /home/gpadmin/{{ binary_installer_file }}.{{ cbdb.binary_type }}
     state: present
@@ -100,7 +100,7 @@
   when: ( cbdb_install == True and cbdb.binary_type == 'deb' )
 
 
-- name: Create Symlink for CloudBerry Install Directory
+- name: Create Symlink for CloudBerry MPP Database Install Directory
   file:
     src: "{{ cbdb.base_dir }}/{{ install_path }}"
     dest: "{{ cbdb.base_dir }}/{{ link_path }}"
@@ -115,12 +115,12 @@
   when: ( cbdb_install == True and cbdb.binary_type == 'zip' )
 
 
-- name: Check Again if the CloudBerry Database Version is Already Installed
+- name: Check Again if the CloudBerry MPP Database Version is Already Installed
   stat: path={{ cbdb.base_dir }}/{{ install_path }}
   register: verify_cbdb_installed
 
 
-- name: Stop if CloudBerry Database Software is not Installed
-  fail: msg="Installing CloudBerry Database Software is currently failed!"
+- name: Stop if CloudBerry MPP Database Software is not Installed
+  fail: msg="Installing CloudBerry MPP Database Software is currently failed!"
   when: verify_cbdb_installed.stat.exists != True
 

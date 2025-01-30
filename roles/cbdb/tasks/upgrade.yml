@@ -35,20 +35,20 @@
 
 
 # If {{ gpd.base_dir }}/{{ cbdb.pkg_name }}-{ new version } does not exists, it's an upgrade
-- name: Identify CloudBerry Database Upgrade
+- name: Identify CloudBerry MPP Database Upgrade
   set_fact:
     cbdb_upgrade: True
   when: cbdb_linked.stat.exists == True and cbdb_installed.stat.exists != True
 
 
 # If the link points to a different existing directory, it's a link change
-- name: Identify CloudBerry Database Linkchange
+- name: Identify CloudBerry MPP Database Linkchange
   set_fact:
     cbdb_linkchange: True
   when: ( cbdb_linked.stat.exists == True and cbdb_installed.stat.exists == True and cbdb_linked.stat.lnk_source != "{{ cbdb.base_dir }}/{{ cbdb.pkg_name }}-{{ upgrade.major_version }}.{{ upgrade.minor_version }}" )
 
 
-- name: Check if CloudBerry Database is Running
+- name: Check if CloudBerry MPP Database is Running
   stat: path=/tmp/.s.PGSQL.5432
   register: cbdb_running
   when:
@@ -57,7 +57,7 @@
 - debug: msg={{ cbdb_running }}
 
 
-- name: Shutdown CloudBerry Database
+- name: Shutdown CloudBerry MPP Database
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -a )
   async: 60
@@ -69,14 +69,14 @@
 - debug: msg={{ database_shutdowned }}
 
 
-- name: Copy CloudBerry Database {{ upgrade.major_version }} {{ upgrade.binary_type }} Package
+- name: Copy CloudBerry MPP Database {{ upgrade.major_version }} {{ upgrade.binary_type }} Package
   copy: src={{ binary_upgrade_file }}.rpm dest=/home/gpadmin/{{ binary_upgrade_file }}.rpm mode=0644 owner=gpadmin group=gpadmin
   when:
     - cbdb_upgrade == True or cbdb_linkchange == True
     - upgrade.binary_type == 'rpm'
 
 
-- name: Install CloudBerry Database Software in {{ cbdb.base_dir }}
+- name: Install CloudBerry MPP Database Software in {{ cbdb.base_dir }}
   package:
     name: /home/gpadmin/{{ binary_upgrade_file }}.rpm
     state: latest
@@ -153,7 +153,7 @@
   # - { regexp: '^export MASTER_DATA_DIRECTORY=', line: 'export MASTER_DATA_DIRECTORY={{ cbdb.data_dir }}/master/gpseg-1', state: present }
 
 
-- name: Start CloudBerry Database after Upgrade
+- name: Start CloudBerry MPP Database after Upgrade
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ upgrade_path }}/greenplum_path.sh && gpstart -a )
   async: 60

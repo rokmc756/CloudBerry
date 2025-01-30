@@ -54,7 +54,7 @@
     create: yes
   register: hostfile_created
   with_items: "{{ groups['segments'] }}"
-  when: ( inventory_hostname in groups['master'] and cbdb_install == True ) and ( db is defined and db == true )
+  when: ( inventory_hostname in groups['master'] and cbdb_install == True )
 
 
 - name: Fix Permissions and Ownership for gpinitsystem Config File and hostlist File
@@ -92,7 +92,7 @@
   when: inventory_hostname in groups['master'] and cbdb_install == True
 
 
-- name: Change Permission of CloudBerry Database Directory
+- name: Change Permission of CloudBerry MPP Database Directory
   file:
     path: "{{ item.dir }}"
     state: "{{ item.state }}"
@@ -105,7 +105,7 @@
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
 
 
-- name: Change Permission of CloudBerry Database Link since Above Task does not Work for Link
+- name: Change Permission of CloudBerry MPP Database Link since Above Task does not Work for Link
   shell: "chown -R gpadmin:gpadmin {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}"
   when: inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] or inventory_hostname in groups['segments']
 
@@ -155,7 +155,7 @@
   when: ( inventory_hostname in groups['segments'] and cbdb.initdb_with_standby == true ) and ( cbdb_initialized.stat.exists != True or cbdb_initialized.stat.exists == True )
 
 
-- name: Install CloudBerry Database Binary into Segment Nodes by Running gpseginstall
+- name: Install CloudBerry MPP Database Binary into Segment Nodes by Running gpseginstall
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpseginstall -f {{ cbdb.admin_home_dir }}/hostfile )
   async: 120
@@ -165,7 +165,7 @@
   when: inventory_hostname in groups['master'] and ( cbdb_initialized.stat.exists != True and cbdb.initdb_single == False and cbdb.seg_serialized_install == True )
 
 
-- name: Initialize CloudBerry Database Cluster
+- name: Initialize CloudBerry MPP Database Cluster
   become_user: gpadmin
   shell: |
     source {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpinitsystem -c {{ cbdb.admin_home_dir }}/gpinitsystem_config -a {{ cbdb.spread_mirrors }} -h {{ cbdb.admin_home_dir }}/hostfile
@@ -192,7 +192,7 @@
   when: ( inventory_hostname in groups['master'] or inventory_hostname in groups['standby'] ) and ( cbdb_install == True or cbdb_linkchange == True )
 
 
-- name: Restart CloudBerry Database after Initialization
+- name: Restart CloudBerry MPP Database after Initialization
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
   async: 60
@@ -200,13 +200,13 @@
   when: inventory_hostname in groups['master'] and ( cbdb_install == True or cbdb_linkchange == True )
 
 
-- name: Check if CloudBerry Database is Running
+- name: Check if CloudBerry MPP Database is Running
   stat: path=/tmp/.s.PGSQL.5432
   register: cbdb_running_nothing
   when: inventory_hostname in groups['master'] and ( cbdb_install == True and cbdb_linkchange == True )
 
 
-- name: Start CloudBerry Database
+- name: Start CloudBerry MPP Database
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstart -a )
   async: 60

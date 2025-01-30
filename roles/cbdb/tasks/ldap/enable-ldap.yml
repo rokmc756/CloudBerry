@@ -1,5 +1,5 @@
 ---
-- name: Verify that CloudBerry Database is Up and Running
+- name: Verify that CloudBerry MPP Database is Up and Running
   become_user: gpadmin
   changed_when: False
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "SELECT VERSION()" )
@@ -7,7 +7,7 @@
     executable: /bin/bash
   register: select_version
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: Add IP address of FreeIPA Server
@@ -49,7 +49,7 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Add LDAP User into FreeIPA Server for CloudBerry Database Authentication
+- name: Add LDAP User into FreeIPA Server for CloudBerry MPP Database Authentication
   shell: |
     echo {{ freeipa.admin_passwd }} | kinit -p {{ freeipa.admin_user }}
     echo {{ item.passwd }} | ipa user-add {{ item.username }} --first={{ item.first_name }} --last={{ item.last_name }} --password
@@ -61,7 +61,7 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Add Service for CloudBerry Database into FreeIPA Server
+- name: Add Service for CloudBerry MPP Database into FreeIPA Server
   shell: |
     echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
     ipa service-add postgres/{{ freeipa.client_fqdn }}.{{ freeipa.client_domain }}@{{ freeipa.client_realm }}
@@ -71,7 +71,7 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Add LDAP Configuration File to Authenticate LDAP User into CloudBerry Database
+- name: Add LDAP Configuration File to Authenticate LDAP User into CloudBerry MPP Database
   become_user: gpadmin
   lineinfile:
     dest: "{{ cbdb.coordinator_data_dir }}/{{ item.file }}"
@@ -92,7 +92,7 @@
   register: ldap_users_added
   with_items: "{{ freeipa.ldap.users }}"
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: Create Database for LDAP Users
@@ -103,10 +103,10 @@
     executable: /bin/bash
   register: ldap_database_created
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
-- name: Restart CloudBerry Database to Apply Changes
+- name: Restart CloudBerry MPP Database to Apply Changes
   become_user: gpadmin
   changed_when: False
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
@@ -114,5 +114,5 @@
     executable: /bin/bash
   register: cbdb_restarted
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 

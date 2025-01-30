@@ -1,5 +1,5 @@
 ---
-- name: Verify that CloudBerry Database is Up and Running
+- name: Verify that CloudBerry MPP Database is Up and Running
   become_user: gpadmin
   changed_when: False
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "SELECT VERSION()" )
@@ -7,7 +7,7 @@
     executable: /bin/bash
   register: select_version
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: Install FreeIPA Client Package
@@ -49,7 +49,7 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Add Kerberos User into FreeIPA Server for CloudBerry Database Authentication
+- name: Add Kerberos User into FreeIPA Server for CloudBerry MPP Database Authentication
   shell: |
     echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
     echo {{ item.passwd }} | ipa user-add {{ item.username }} --first={{ item.first_name }} --last={{ item.last_name }} --password
@@ -61,7 +61,7 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Add Service for CloudBerry Database into FreeIPA Server
+- name: Add Service for CloudBerry MPP Database into FreeIPA Server
   shell: |
     echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
     ipa service-add postgres/{{ freeipa.client_fqdn }}.{{ freeipa.client_domain }}@{{ freeipa.client_realm }}
@@ -71,7 +71,7 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Get Keytab File for CloudBerry Database Service from FreeIPA Server
+- name: Get Keytab File for CloudBerry MPP Database Service from FreeIPA Server
   shell: |
     echo {{ freeipa.admin_passwd }} | kinit {{ freeipa.admin_user }}
     ipa-getkeytab -s {{ freeipa.client_server }} -p postgres/{{ freeipa.client_fqdn }}.{{ freeipa.client_domain }}@{{ freeipa.client_realm }} -k {{ freeipa.kerberos.client_keytab }}
@@ -101,10 +101,10 @@
   register: krb5_keytab_enabled
   with_items: "{{ freeipa.kerberos.users }}"
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
-- name: Add Kerberos Configuration to Authenticate Kerberos User into CloudBerry Database
+- name: Add Kerberos Configuration to Authenticate Kerberos User into CloudBerry MPP Database
   become_user: gpadmin
   lineinfile:
     dest: "{{ cbdb.coordinator_data_dir }}/{{ item.file }}"
@@ -125,7 +125,7 @@
   register: krb5_users_added
   with_items: "{{ freeipa.kerberos.users }}"
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
 - name: Create Database for Kerberos Users
@@ -136,10 +136,10 @@
     executable: /bin/bash
   register: krb5_database_created
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"
 
 
-- name: Restart CloudBerry Database to Apply Changes
+- name: Restart CloudBerry MPP Database to Apply Changes
   become_user: gpadmin
   changed_when: False
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -ra )
@@ -147,4 +147,4 @@
     executable: /bin/bash
   register: cbdb_restarted
   when: inventory_hostname in groups['master']
-  failed_when: "'(CloudBerry Database ' not in select_version.stdout"
+  failed_when: "'(Cloudberry Database ' not in select_version.stdout"

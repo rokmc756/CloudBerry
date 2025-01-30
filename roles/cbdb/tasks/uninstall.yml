@@ -11,18 +11,18 @@
   when: ( inventory_hostname in groups['master'] )
 
 
-- name: Check if Any Version of CloudBerry Database is Already Linked
+- name: Check if Any Version of CloudBerry MPP Database is Already Linked
   stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
   register: check_cbdb_link
 
 
-- name: Check if the CloudBerry Database Version is Already Installed
+- name: Check if the CloudBerry MPP Database Version is Already Installed
   stat: path={{ cbdb.base_dir }}/{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}.{{ cbdb.patch_version }}
   register: check_cbdb_dir
 
 
 - name: Sanity Check for {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}
-  fail: msg="CloudBerry Database Software is not existed"
+  fail: msg="CloudBerry MPP Database Software is not existed"
   when: check_cbdb_dir.stat.exists != True and check_cbdb_link.stat.islnk != True
 
 
@@ -33,41 +33,41 @@
     binary_installer_file: "{{ cbdb.pkg_name }}-{{ cbdb.major_version }}.{{ cbdb.minor_version }}-{{ cbdb.patch_version }}.{{ cbdb.os_name }}-{{ cbdb.arch_name }}"
 
 
-- name: Identify CloudBerry Database Uninstallation
+- name: Identify CloudBerry MPP Database Uninstallation
   set_fact:
     cbdb_uninstall: true
   when: check_cbdb_dir.stat.exists == True and check_cbdb_link.stat.islnk == True
 
 
-- name: Identify CloudBerry Database Linkchange
+- name: Identify CloudBerry MPP Database Linkchange
   set_fact:
     cbdb_unlinkchange: true
   when: check_cbdb_dir.stat.exists == True and check_cbdb_link.stat.islnk == True
 
 
-- name: CloudBerry Database Uninstallation
-  debug: msg="Uninstall CloudBerry Database"
+- name: CloudBerry MPP Database Uninstallation
+  debug: msg="Uninstall CloudBerry MPP Database"
   when: cbdb_uninstall == true
 
 
-- name: CloudBerry Database Linkchange
-  debug: msg="Delete link to CloudBerry Database version"
+- name: CloudBerry MPP Database Linkchange
+  debug: msg="Delete link to CloudBerry MPP Database Version"
   when: cbdb_unlinkchange == True
 
 
-- name: CloudBerry Database - Nothing to Do
+- name: CloudBerry MPP Database - Nothing to Do
   debug: msg="Nothing to do (Uo Uninstall/Delete Link Required)"
   when: cbdb_uninstall == False and cbdb_unlinkchange == False
 
 
 # Database Uninstallation
-- name: Check if CloudBerry Database is Running
+- name: Check if CloudBerry MPP Database is Running
   stat: path=/tmp/.s.PGSQL.5432
   register: cbdb_running
   when: inventory_hostname in groups['master'] and ( cbdb_uninstall == True or cbdb_unlinkchange == True )
 
 
-- name: Verify that CloudBerry Database is Up and Running
+- name: Verify that CloudBerry MPP Database is Up and Running
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && psql -c "SELECT VERSION()" )
   register: select_version
@@ -76,7 +76,7 @@
   when: inventory_hostname in groups['master']
 
 
-- name: Shutdown CloudBerry Database
+- name: Shutdown CloudBerry MPP Database
   become_user: gpadmin
   shell: ( . {{ cbdb.base_dir }}/{{ cbdb.pkg_name }}/greenplum_path.sh && gpstop -a )
   async: 60
@@ -86,7 +86,7 @@
   when: ( inventory_hostname in groups['master'] and cbdb_running.stat.exists == true and "'(Cloudberry Database ' not in select_version.stdout" )
 
 
-- name: Uninstall CloudBerry Database Software Package
+- name: Uninstall CloudBerry MPP Database Software Package
   package:
     name: "{{ cbdb.pkg_name }}"
     state: absent
@@ -138,7 +138,7 @@
   when: ( cbdb_uninstall == True or cbdb_unlinkchange == True )
 
 
-- name: Delete CloudBerry Database Directories
+- name: Delete CloudBerry MPP Database Directories
   file:
     path: "{{ item }}"
     state: absent
@@ -149,8 +149,8 @@
   when: ( cbdb_uninstall == True and cbdb_unlinkchange == True )
 
 
-- name: CloudBerry Database Uninstallation
-  debug: msg="CloudBerry Database {{ cbdb.major_version }}.{{ cbdb.minor_version }} uninstalled"
+- name: CloudBerry MPP Database Uninstallation
+  debug: msg="CloudBerry MPP Database {{ cbdb.major_version }}.{{ cbdb.minor_version }} uninstalled"
   when: cbdb_uninstall == True
   ignore_errors: true
   notify:

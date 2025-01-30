@@ -64,7 +64,7 @@ ANSIBLE_TARGET_PASS="changeme"  # # It should be changed with password of sudo u
 
 #### 3) Configure inventory for hostname, ip address, username and user's password
 ```yaml
-$ vi ansible-hosts
+$ vi ansible-hosts-rk9
 [all:vars]
 ssh_key_filename="id_rsa"
 remote_machine_username="jomoon"
@@ -213,10 +213,11 @@ $ make cbdb r=uninstall s=all
 
 
 ## Planning
-[ ] Fixing Initialize Coodinator with Standby\
-[ ] Change CentOS and Rocky Linux repository into local mirror in Korea\
-[ ] Converting Makefile.init from original project\
-[ ] Adding SELinux role\
-[ ] Adding tuned role
+- [O] Need to fix SEGFAULT when enabling SSL - https://knowledge.broadcom.com/external/article/382919/master-panics-after-enabling-ssl-on-gree.html
+- [ ] Fixing Initialize Coodinator with Standby\
+- [ ] Change CentOS and Rocky Linux repository into local mirror in Korea\
+- [ ] Converting Makefile.init from original project\
+- [ ] Adding SELinux role\
+- [ ] Adding tuned role
 
 

@@ -39,7 +39,7 @@
 
 - name: Add CloudBerry Standby Master MPP Database
   import_tasks: init-stadnby-cbdb.yml
-  tags: add
+  tags: add, install
   when: ( standby is defined and standby == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
