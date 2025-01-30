@@ -9,9 +9,9 @@
   tags: install, uninstall, prepare, add
 
 
-- name: Check if CloudBerry Database is Installed Already
+- name: Check if CloudBerry MPP Database is Installed Already
   import_tasks: check-cbdb-installed.yml
-  tags: prepare, install, deploy, init, enable
+  tags: prepare, install, deploy, init
 
 
 - name: Prepare OS Parameters
@@ -19,25 +19,25 @@
   tags: prepare
 
 
-- name: Install CloudBerry Database Software Binary
+- name: Install CloudBerry MPP Database Software Binary
   import_tasks: install-cbdb.yml
   tags: install, deploy, init
   when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
-- name: Initialize CloudBerry Database
+- name: Initialize CloudBerry MPP Database
   import_tasks: init-cbdb.yml
   tags: install, init, deploy
   when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
-- name: Finalize CloudBerry Database
+- name: Finalize CloudBerry MPP Database
   import_tasks: finalize-cbdb.yml
-  tags: install, deploye
+  tags: install, deploy
   when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
-- name: Add CloudBerry Standby Master Database
+- name: Add CloudBerry Standby Master MPP Database
   import_tasks: init-stadnby-cbdb.yml
   tags: add
   when: ( standby is defined and standby == true ) or ( cbdb_all is defined and cbdb_all == true )
@@ -49,34 +49,34 @@
   when: ( tls is defined and tls == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
-- name: Enable LDAP Authentication
-  import_tasks: ldap/enable-ldap.yml
-  tags: install, enable
-  when: ( ldap is defined and ldap == true ) or ( cbdb_all is defined and cbdb_all == true )
-
-
 - name: Enable Resource Group
   import_tasks: rg/enable-resource-group.yml
   tags: install, enable
   when: ( rg is defined and rg == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
+- name: Enable LDAP Authentication
+  import_tasks: ldap/enable-ldap.yml
+  tags: install, enable
+  when: ( ldap is defined and ldap == true )
+
+
 - name: Enable Kerberos Authentication
   import_tasks: krb5/enable-kerberos.yml
   tags: install, enable
-  when: ( krb5 is defined and krb5 == true ) or ( cbdb_all is defined and cbdb_all == true )
+  when: ( krb5 is defined and krb5 == true )
 
 
 - name: Uninstall LDAP Authentication
   import_tasks: ldap/uninstall-ldap.yml
   tags: uninstall, destroy
-  when: ( ldap is defined and ldap == true ) or ( cbdb_all is defined and cbdb_all == true )
+  when: ( ldap is defined and ldap == true )
 
 
 - name: Uninstall Kerberos Authentication
   import_tasks: krb5/uninstall-kerberos.yml
   tags: uninstall, destroy
-  when: ( krb5 is defined and krb5 == true ) or ( cbdb_all is defined and cbdb_all == true )
+  when: ( krb5 is defined and krb5 == true )
 
 
 - name: Disable Resource Group
@@ -85,14 +85,13 @@
   when: ( rg is defined and rg == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
-- name: Uninstall CloudBerry Database
+- name: Uninstall CloudBerry MPP Database
   import_tasks: uninstall.yml
   tags: uninstall, destroy
   when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 
 
-- name: Upgrade CloudBerry Database
+- name: Upgrade CloudBerry MPP Database
   import_tasks: upgrade.yml
   tags: upgrade
-  when: ( db is defined and db == true ) or ( cbdb_all is defined and cbdb_all == true )
 

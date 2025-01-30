@@ -12,31 +12,31 @@
 - name: Check if CloudBerry Database is Installed
   import_tasks: 01-check-cbdb.yml
   tags: install, check
-  when: ( pxf is defined and pxf == true )
+  when: ( pxf is defined and pxf == true ) or ( pxf_all is defined and pxf_all == true )
 
 
 - name: Install Java
   import_tasks: 02-install-java.yml
   tags: install
-  when: ( java is defined and java == true )
+  when: ( java is defined and java == true ) or ( pxf_all is defined and pxf_all == true )
 
 
 - name: Install CloudBerry PXF
   import_tasks: 03-install-pxf.yml
   tags: install
-  when: ( pxf is defined and pxf == true )
+  when: ( pxf is defined and pxf == true ) or ( pxf_all is defined and pxf_all == true )
 
 
 - name: Start CloudBerry PXF
   import_tasks: 04-start-pxf.yml
   tags: install, start
-  when: ( pxf is defined and pxf == true )
+  when: ( pxf is defined and pxf == true ) or ( pxf_all is defined and pxf_all == true )
 
 
 - name: Config CloudBerry PXF
   import_tasks: 05-config-pxf.yml
   tags: install, config
-  when: ( pxf is defined and pxf == true )
+  when: ( pxf is defined and pxf == true ) or ( pxf_all is defined and pxf_all == true )
 
 
 - name: Setup NFS Access
@@ -102,19 +102,19 @@
 - name: Stop CloudBerry PXF
   import_tasks: 41-stop-pxf.yml
   tags: uninstall, stop
-  when: ( pxf is defined and pxf == true )
+  when: ( pxf is defined and pxf == true ) or ( pxf_all is defined and pxf_all == true )
 
 
 - name: Remove CloudBerry PXF Extension Package and Config Files
   import_tasks: 42-remove-pxf-extension.yml
   tags: uninstall
-  when: ( pxf is defined and pxf == true )
+  when: ( pxf is defined and pxf == true ) or ( pxf_all is defined and pxf_all == true )
 
 
 - name: Remove CloudBerry PXF Extension in Database
   import_tasks: 43-remove-pxf-db.yml
   tags: uninstall
-  when: ( pxf is defined and pxf == true )
+  when: ( pxf is defined and pxf == true ) or ( pxf_all is defined and pxf_all == true )
 
 
 - name: Upgrade PXF

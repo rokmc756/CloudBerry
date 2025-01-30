@@ -185,24 +185,31 @@ $ make cbdb r=install s=db
 
 $ make cbdb r=add s=standby
 
-$ make cbdb r=install s=rg
+$ make cbdb r=enable s=tls
 
-$ make cbdb r=install s=tls
+$ make cbdb r=enable s=rg
+
+or
+$ make cbdb r=prepare
+$ make cbdb r=install s=all
 ```
 
 
 #### 7) Deploy or Destroy PXF Extentions
 ```yaml
-$ make pxf r=install
-$ make pxf r=uninstall
+$ make pxf r=install s=all
+$ make pxf r=uninstall s=all
 ```
 
 
 #### 8) Destroy CBDB and Extentions
 ```yaml
+$ make cbdb r=disable s=rg
 $ make cbdb r=uninstall s=db
-```
 
+or
+$ make cbdb r=uninstall s=all
+```
 
 
 ## Planning

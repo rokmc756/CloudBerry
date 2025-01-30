@@ -41,17 +41,6 @@
   with_items:
     - "nohup pkill -U "
     - "nohup fuser -k /home/"
-  # sleep 3
-
-
-- name: Kill Processes Hold On User Directory
-  become: true
-  shell: |
-    nohup fuser -k /home/{{ sudo_user }}
-    sleep 3
-  register: kill_user_processes
-  until: kill_user_processes is succeeded
-  retries: 10
 
 
 - name: Delete "{{ sudo_user }}" user and group
